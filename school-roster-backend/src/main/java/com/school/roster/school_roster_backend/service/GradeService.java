@@ -1,0 +1,87 @@
+package com.school.roster.school_roster_backend.service;
+
+import com.school.roster.school_roster_backend.entity.Grade;
+import com.school.roster.school_roster_backend.entity.Roster;
+import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.repository.GradeRepository;
+import com.school.roster.school_roster_backend.repository.RosterRepository;
+import com.school.roster.school_roster_backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class GradeService {
+
+    private final GradeRepository gradeRepository;
+    private final RosterRepository rosterRepository;
+    private final UserRepository userRepository;
+
+    // === Update Grades for a Student in a Roster ===
+    public Grade updateGrades(Long gradeId, List<Float> performanceScores, List<Float> quizScores, List<Float> quarterlyExamScores) {
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + gradeId));
+
+        grade.setPerformanceScores(performanceScores);
+        grade.setQuizScores(quizScores);
+        grade.setQuarterlyExamScores(quarterlyExamScores);
+
+        float finalGpa = calculateFinalGpa(performanceScores, quizScores, quarterlyExamScores);
+        grade.setFinalGpa(finalGpa);
+
+        gradeRepository.save(grade);
+
+        // Update Roster Class GPA
+        updateRosterClassGpa(grade.getRoster().getId());
+
+        return grade;
+    }
+
+    // === Calculate GPA for a Student ===
+    private float calculateFinalGpa(List<Float> performance, List<Float> quizzes, List<Float> exams) {
+        float perfAvg = performance.isEmpty() ? 0 : (float) performance.stream().mapToDouble(Float::doubleValue).average().orElse(0);
+        float quizAvg = quizzes.isEmpty() ? 0 : (float) quizzes.stream().mapToDouble(Float::doubleValue).average().orElse(0);
+        float examAvg = exams.isEmpty() ? 0 : (float) exams.stream().mapToDouble(Float::doubleValue).average().orElse(0);
+
+        return (perfAvg * 0.4f) + (quizAvg * 0.4f) + (examAvg * 0.2f);
+    }
+
+    // === Update Class GPA for the Roster ===
+    private void updateRosterClassGpa(Long rosterId) {
+        Roster roster = rosterRepository.findById(rosterId)
+                .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
+
+        List<Grade> grades = roster.getGrades();
+        if (grades.isEmpty()) {
+            roster.setClassGpa(0f);
+        } else {
+            float avg = (float) grades.stream()
+                    .mapToDouble(g -> g.getFinalGpa() == null ? 0 : g.getFinalGpa())
+                    .average()
+                    .orElse(0);
+            roster.setClassGpa(avg);
+        }
+
+        rosterRepository.save(roster);
+    }
+
+    // === Get Grades by Student ===
+    public List<Grade> getGradesByStudent(String studentId) {
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+
+        return gradeRepository.findByStudentId(student.getId());
+    }
+
+    // === Get Grades by Roster ===
+    public List<Grade> getGradesByRoster(Long rosterId) {
+        Roster roster = rosterRepository.findById(rosterId)
+                .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
+
+        return gradeRepository.findByRosterId(roster.getId());
+    }
+}
