@@ -53,7 +53,7 @@ public class NonStudentProfile {
     private String spouseLastName;
     private String spouseOccupation;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ElementCollection
     private List<DependentChild> dependentChildren;
 
     @Column(name = "tax_number", length = 255)
@@ -68,10 +68,10 @@ public class NonStudentProfile {
     @Column(name = "pagibig_number", length = 255)
     private String pagIbigNumberEncrypted;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ElementCollection
     private List<AppointmentRecord> employmentAppointments;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ElementCollection
     private List<EducationRecord> educationalBackground;
 
     private String departmentOfEducationEmail;

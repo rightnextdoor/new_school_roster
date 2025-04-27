@@ -1,4 +1,14 @@
 package com.school.roster.school_roster_backend.entity.enums;
 
 public enum AppointmentType {
+    ORIGINAL_APPOINTMENT,
+    SECOND_APPOINTMENT,
+    THIRD_APPOINTMENT,
+    FOURTH_APPOINTMENT,
+    FIFTH_APPOINTMENT,
+    SIXTH_APPOINTMENT,
+    SEVENTH_APPOINTMENT,
+    EIGHTH_APPOINTMENT,
+    NINTH_APPOINTMENT,
+    TENTH_APPOINTMENT
 }

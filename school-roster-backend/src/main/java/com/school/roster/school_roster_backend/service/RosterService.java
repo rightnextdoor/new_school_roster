@@ -122,4 +122,36 @@ public class RosterService {
         // Then delete Roster
         rosterRepository.delete(roster);
     }
+
+    // === Find Roster by ID ===
+    public Roster getRosterById(Long id) {
+        return rosterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + id));
+    }
+
+    // === Find Rosters by Student ID ===
+    public List<Roster> getRostersByStudentId(String studentId) {
+        List<Roster> result = new ArrayList<>();
+        List<Roster> allRosters = rosterRepository.findAll();
+        for (Roster roster : allRosters) {
+            for (User student : roster.getStudents()) {
+                if (student.getId().equals(studentId)) {
+                    result.add(roster);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    // === Find Rosters by Teacher ID ===
+    public List<Roster> getRostersByTeacherId(String teacherId) {
+        return rosterRepository.findByTeacherId(teacherId);
+    }
+
+    // === Get All Rosters ===
+    public List<Roster> getAllRosters() {
+        return rosterRepository.findAll();
+    }
+
 }

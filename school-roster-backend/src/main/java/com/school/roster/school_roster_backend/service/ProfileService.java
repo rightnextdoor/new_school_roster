@@ -3,12 +3,18 @@ package com.school.roster.school_roster_backend.service;
 import com.school.roster.school_roster_backend.entity.NonStudentProfile;
 import com.school.roster.school_roster_backend.entity.StudentProfile;
 import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.enums.BMICategory;
+import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import com.school.roster.school_roster_backend.repository.NonStudentProfileRepository;
 import com.school.roster.school_roster_backend.repository.StudentProfileRepository;
 import com.school.roster.school_roster_backend.repository.UserRepository;
+import com.school.roster.school_roster_backend.security.CryptoUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +37,18 @@ public class ProfileService {
         studentProfile.setLinkedUser(user);
         user.setStudentProfile(studentProfile);
 
+        if (studentProfile.getSchoolHistories() != null) {
+            studentProfile.getSchoolHistories().forEach(history -> {
+                if (history.getGpa() != null) {
+                    history.setGradeStatus(calculateGradeStatus(history.getGpa()));
+                }
+            });
+        }
+
+        if (studentProfile.getNutritionalStatus() != null) {
+            updateNutritionalStatus(studentProfile);
+        }
+
         studentProfileRepository.save(studentProfile);
         userRepository.save(user);
 
@@ -42,7 +60,6 @@ public class ProfileService {
         StudentProfile existingProfile = studentProfileRepository.findById(profileId)
                 .orElseThrow(() -> new RuntimeException("StudentProfile not found with ID: " + profileId));
 
-        // Update only editable fields
         existingProfile.setFirstName(updatedData.getFirstName());
         existingProfile.setMiddleName(updatedData.getMiddleName());
         existingProfile.setLastName(updatedData.getLastName());
@@ -59,8 +76,53 @@ public class ProfileService {
         existingProfile.setSchoolHistories(updatedData.getSchoolHistories());
         existingProfile.setNutritionalStatus(updatedData.getNutritionalStatus());
 
+        if (existingProfile.getSchoolHistories() != null) {
+            existingProfile.getSchoolHistories().forEach(history -> {
+                if (history.getGpa() != null) {
+                    history.setGradeStatus(calculateGradeStatus(history.getGpa()));
+                }
+            });
+        }
+
+        if (existingProfile.getNutritionalStatus() != null) {
+            updateNutritionalStatus(existingProfile);
+        }
+
         return studentProfileRepository.save(existingProfile);
     }
+
+    private StudentGradeStatus calculateGradeStatus(Float gpa) {
+        if (gpa == null) return StudentGradeStatus.FAILED;
+        if (gpa >= 98) return StudentGradeStatus.WITH_HIGHEST_HONORS;
+        if (gpa >= 95) return StudentGradeStatus.WITH_HIGH_HONORS;
+        if (gpa >= 90) return StudentGradeStatus.WITH_HONORS;
+        if (gpa >= 75) return StudentGradeStatus.COMPLETED_WITHOUT_HONORS;
+        return StudentGradeStatus.FAILED;
+    }
+
+    private void updateNutritionalStatus(StudentProfile profile) {
+        if (profile.getNutritionalStatus().getHeightInMeters() != null
+                && profile.getNutritionalStatus().getWeightInKilograms() != null) {
+
+            Float height = profile.getNutritionalStatus().getHeightInMeters();
+            Float weight = profile.getNutritionalStatus().getWeightInKilograms();
+            Float bmi = weight / (height * height);
+            profile.getNutritionalStatus().setBmi(bmi);
+
+            if (bmi < 16) {
+                profile.getNutritionalStatus().setBmiCategory(BMICategory.SEVERELY_WASTED);
+            } else if (bmi < 18.5) {
+                profile.getNutritionalStatus().setBmiCategory(BMICategory.WASTED);
+            } else if (bmi < 25) {
+                profile.getNutritionalStatus().setBmiCategory(BMICategory.NORMAL);
+            } else if (bmi < 30) {
+                profile.getNutritionalStatus().setBmiCategory(BMICategory.OVERWEIGHT);
+            } else {
+                profile.getNutritionalStatus().setBmiCategory(BMICategory.OBESE);
+            }
+        }
+    }
+
 
     // === Delete Student Profile ===
     public void deleteStudentProfile(Long profileId) {
@@ -88,6 +150,24 @@ public class ProfileService {
         nonStudentProfile.setLinkedUser(user);
         user.setNonStudentProfile(nonStudentProfile);
 
+        if (nonStudentProfile.getDependentChildren() != null) {
+            nonStudentProfile.getDependentChildren().forEach(this::updateDependentChildAge);
+        }
+
+        if (nonStudentProfile.getTaxNumberEncrypted() != null) {
+            nonStudentProfile.setTaxNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getTaxNumberEncrypted()));
+        }
+        if (nonStudentProfile.getGsisNumberEncrypted() != null) {
+            nonStudentProfile.setGsisNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getGsisNumberEncrypted()));
+        }
+        if (nonStudentProfile.getPhilHealthNumberEncrypted() != null) {
+            nonStudentProfile.setPhilHealthNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getPhilHealthNumberEncrypted()));
+        }
+        if (nonStudentProfile.getPagIbigNumberEncrypted() != null) {
+            nonStudentProfile.setPagIbigNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getPagIbigNumberEncrypted()));
+        }
+
+
         nonStudentProfileRepository.save(nonStudentProfile);
         userRepository.save(user);
 
@@ -99,7 +179,6 @@ public class ProfileService {
         NonStudentProfile existingProfile = nonStudentProfileRepository.findById(profileId)
                 .orElseThrow(() -> new RuntimeException("NonStudentProfile not found with ID: " + profileId));
 
-        // Update only editable fields
         existingProfile.setFirstName(updatedData.getFirstName());
         existingProfile.setMiddleName(updatedData.getMiddleName());
         existingProfile.setLastName(updatedData.getLastName());
@@ -113,18 +192,38 @@ public class ProfileService {
         existingProfile.setSpouseLastName(updatedData.getSpouseLastName());
         existingProfile.setSpouseOccupation(updatedData.getSpouseOccupation());
         existingProfile.setDependentChildren(updatedData.getDependentChildren());
-        existingProfile.setTaxNumberEncrypted(updatedData.getTaxNumberEncrypted());
-        existingProfile.setGsisNumberEncrypted(updatedData.getGsisNumberEncrypted());
-        existingProfile.setPhilHealthNumberEncrypted(updatedData.getPhilHealthNumberEncrypted());
-        existingProfile.setPagIbigNumberEncrypted(updatedData.getPagIbigNumberEncrypted());
+        if (updatedData.getTaxNumberEncrypted() != null) {
+            existingProfile.setTaxNumberEncrypted(CryptoUtils.encrypt(updatedData.getTaxNumberEncrypted()));
+        }
+        if (updatedData.getGsisNumberEncrypted() != null) {
+            existingProfile.setGsisNumberEncrypted(CryptoUtils.encrypt(updatedData.getGsisNumberEncrypted()));
+        }
+        if (updatedData.getPhilHealthNumberEncrypted() != null) {
+            existingProfile.setPhilHealthNumberEncrypted(CryptoUtils.encrypt(updatedData.getPhilHealthNumberEncrypted()));
+        }
+        if (updatedData.getPagIbigNumberEncrypted() != null) {
+            existingProfile.setPagIbigNumberEncrypted(CryptoUtils.encrypt(updatedData.getPagIbigNumberEncrypted()));
+        }
         existingProfile.setEmploymentAppointments(updatedData.getEmploymentAppointments());
         existingProfile.setEducationalBackground(updatedData.getEducationalBackground());
         existingProfile.setDepartmentOfEducationEmail(updatedData.getDepartmentOfEducationEmail());
         existingProfile.setProfilePicture(updatedData.getProfilePicture());
         existingProfile.setGradeLevel(updatedData.getGradeLevel());
 
+        if (existingProfile.getDependentChildren() != null) {
+            existingProfile.getDependentChildren().forEach(this::updateDependentChildAge);
+        }
+
         return nonStudentProfileRepository.save(existingProfile);
     }
+
+    private void updateDependentChildAge(com.school.roster.school_roster_backend.entity.embedded.DependentChild child) {
+        if (child.getBirthDate() != null) {
+            int years = java.time.Period.between(child.getBirthDate(), java.time.LocalDate.now()).getYears();
+            child.setAge(years);
+        }
+    }
+
 
     // === Delete Non-Student Profile ===
     public void deleteNonStudentProfile(Long profileId) {
@@ -138,5 +237,40 @@ public class ProfileService {
         }
 
         nonStudentProfileRepository.delete(profile);
+    }
+
+    // === Get Profile by Profile ID (Student or NonStudent) ===
+    public Object getProfileById(Long id) {
+        return studentProfileRepository.findById(id)
+                .<Object>map(profile -> profile)
+                .orElseGet(() -> nonStudentProfileRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Profile not found with ID: " + id)));
+    }
+
+    // === Get Profile by User ID ===
+    public Object getProfileByUserId(String userId) {
+        StudentProfile studentProfile = studentProfileRepository.findAll().stream()
+                .filter(p -> p.getLinkedUser() != null && p.getLinkedUser().getId().equals(userId))
+                .findFirst()
+                .orElse(null);
+
+        if (studentProfile != null) {
+            return studentProfile;
+        }
+
+        NonStudentProfile nonStudentProfile = nonStudentProfileRepository.findAll().stream()
+                .filter(p -> p.getLinkedUser() != null && p.getLinkedUser().getId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Profile not found for User ID: " + userId));
+
+        return nonStudentProfile;
+    }
+
+    // === Get All Profiles Combined ===
+    public List<Object> getAllProfiles() {
+        List<Object> profiles = new ArrayList<>();
+        profiles.addAll(studentProfileRepository.findAll());
+        profiles.addAll(nonStudentProfileRepository.findAll());
+        return profiles;
     }
 }

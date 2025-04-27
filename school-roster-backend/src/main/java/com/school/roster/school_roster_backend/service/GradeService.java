@@ -21,7 +21,7 @@ public class GradeService {
     private final RosterRepository rosterRepository;
     private final UserRepository userRepository;
 
-    // === Update Grades for a Student in a Roster ===
+    // === Update Grades ===
     public Grade updateGrades(Long gradeId, List<Float> performanceScores, List<Float> quizScores, List<Float> quarterlyExamScores) {
         Grade grade = gradeRepository.findById(gradeId)
                 .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + gradeId));
@@ -35,13 +35,12 @@ public class GradeService {
 
         gradeRepository.save(grade);
 
-        // Update Roster Class GPA
         updateRosterClassGpa(grade.getRoster().getId());
 
         return grade;
     }
 
-    // === Calculate GPA for a Student ===
+    // === Calculate GPA ===
     private float calculateFinalGpa(List<Float> performance, List<Float> quizzes, List<Float> exams) {
         float perfAvg = performance.isEmpty() ? 0 : (float) performance.stream().mapToDouble(Float::doubleValue).average().orElse(0);
         float quizAvg = quizzes.isEmpty() ? 0 : (float) quizzes.stream().mapToDouble(Float::doubleValue).average().orElse(0);
@@ -50,7 +49,7 @@ public class GradeService {
         return (perfAvg * 0.4f) + (quizAvg * 0.4f) + (examAvg * 0.2f);
     }
 
-    // === Update Class GPA for the Roster ===
+    // === Update Roster Class GPA ===
     private void updateRosterClassGpa(Long rosterId) {
         Roster roster = rosterRepository.findById(rosterId)
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
@@ -69,16 +68,29 @@ public class GradeService {
         rosterRepository.save(roster);
     }
 
-    // === Get Grades by Student ===
-    public List<Grade> getGradesByStudent(String studentId) {
+    // === Delete Grade ===
+    public void deleteGrade(Long gradeId) {
+        Grade grade = gradeRepository.findById(gradeId)
+                .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + gradeId));
+        gradeRepository.delete(grade);
+    }
+
+    // === Get Grade by ID ===
+    public Grade getGradeById(Long id) {
+        return gradeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + id));
+    }
+
+    // === Get Grades by Student ID ===
+    public List<Grade> getGradesByStudentId(String studentId) {
         User student = userRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
 
         return gradeRepository.findByStudentId(student.getId());
     }
 
-    // === Get Grades by Roster ===
-    public List<Grade> getGradesByRoster(Long rosterId) {
+    // === Get Grades by Roster ID ===
+    public List<Grade> getGradesByRosterId(Long rosterId) {
         Roster roster = rosterRepository.findById(rosterId)
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 

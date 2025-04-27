@@ -60,7 +60,7 @@ public class StudentProfile {
 
     private String schoolPicture;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ElementCollection
     private List<SchoolYearHistory> schoolHistories;
 
     @Embedded
