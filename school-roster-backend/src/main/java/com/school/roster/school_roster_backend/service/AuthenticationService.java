@@ -8,8 +8,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +34,24 @@ public class AuthenticationService {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-            return jwtUtils.generateToken(user.getEmail());
+            List<String> roles = user.getRoles().stream()
+                    .map(Enum::name)
+                    .toList();
+
+            // 🧠 Fix: Build full authorities
+            var authorities = roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList());
+
+            // 🧠 Fix: Build new Authentication token with authorities
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    authorities
+            );
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            return jwtUtils.generateToken(user.getEmail(), roles);
 
         } catch (AuthenticationException ex) {
             throw new RuntimeException("Invalid email or password.");

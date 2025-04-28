@@ -84,6 +84,21 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
+    public boolean hasRole(User user, String role) {
+        return user.getRoles().stream()
+                .anyMatch(r -> r.name().equalsIgnoreCase(role));
+    }
+
+    public boolean hasAnyRole(User user, String... roles) {
+        for (String role : roles) {
+            if (user.getRoles().stream().anyMatch(r -> r.name().equalsIgnoreCase(role))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     // === Full Clean Delete User ===
     public void deleteUser(String id) {
         User user = userRepository.findById(id)

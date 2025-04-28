@@ -7,6 +7,8 @@ import com.school.roster.school_roster_backend.repository.GradeRepository;
 import com.school.roster.school_roster_backend.repository.RosterRepository;
 import com.school.roster.school_roster_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,7 @@ public class GradeService {
     private final GradeRepository gradeRepository;
     private final RosterRepository rosterRepository;
     private final UserRepository userRepository;
+    private final RosterService rosterService;
 
     // === Update Grades ===
     // === Update or Create Grade for Student in Roster ===
@@ -99,7 +102,19 @@ public class GradeService {
     public void deleteGrade(Long gradeId) {
         Grade grade = gradeRepository.findById(gradeId)
                 .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + gradeId));
-        gradeRepository.delete(grade);
+
+        Roster roster = grade.getRoster();
+
+        if (roster != null) {
+            roster.getGrades().removeIf(g -> g.getId().equals(gradeId)); // 💥 Remove the deleted Grade from the Roster's list
+            rosterRepository.save(roster); // 💾 Save Roster immediately after cleanup
+        }
+
+        gradeRepository.delete(grade); // ✅ Then delete the Grade
+
+        if (roster != null) {
+            updateRosterClassGpa(roster.getId()); // ✅ Recalculate class GPA after deleting
+        }
     }
 
     // === Get Grade by ID ===
@@ -122,5 +137,78 @@ public class GradeService {
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 
         return gradeRepository.findByRosterId(roster.getId());
+    }
+
+    public StudentGpaResponse getMyGpa(String studentId) {
+        List<Grade> grades = gradeRepository.findByStudentId(studentId);
+
+        List<SubjectGrade> subjects = new ArrayList<>();
+        float total = 0f;
+        int count = 0;
+
+        for (Grade grade : grades) {
+            if (grade.getRoster() == null || grade.getFinalGpa() == null) {
+                continue;
+            }
+
+            String subjectName = grade.getRoster() != null ? grade.getRoster().getSubjectName() : "Unknown Subject";
+            Float gpa = grade.getFinalGpa() != null ? grade.getFinalGpa() : 0f;
+
+            subjects.add(new SubjectGrade(subjectName, gpa));
+            total += gpa;
+            count++;
+        }
+
+        float overallGpa = count > 0 ? total / count : 0f;
+
+        return new StudentGpaResponse(subjects, overallGpa);
+    }
+
+    // Only showing the new helper methods to add at the bottom of GradeService:
+
+    public boolean canUpdateGrade(Long gradeId, User currentUser) {
+        Grade grade = getGradeById(gradeId);
+        Roster roster = grade.getRoster();
+
+        return roster != null &&
+                (roster.getTeacher() != null && roster.getTeacher().getId().equals(currentUser.getId())
+                        || currentUser.getRoles().stream().anyMatch(role ->
+                        role.name().equals("ADMIN") ||
+                                role.name().equals("ADMINISTRATOR") ||
+                                role.name().equals("TEACHER_LEAD")));
+    }
+
+    public boolean canDeleteGrade(Long gradeId, User currentUser) {
+        Grade grade = getGradeById(gradeId);
+        Roster roster = grade.getRoster();
+
+        return roster != null &&
+                (roster.getTeacher() != null && roster.getTeacher().getId().equals(currentUser.getId())
+                        || currentUser.getRoles().stream().anyMatch(role ->
+                        role.name().equals("ADMIN") ||
+                                role.name().equals("ADMINISTRATOR")));
+    }
+
+    public boolean canViewGrade(Long gradeId, User currentUser) {
+        Grade grade = getGradeById(gradeId);
+
+        return (grade.getStudent() != null && grade.getStudent().getId().equals(currentUser.getId())) // owner student
+                || (grade.getRoster() != null && rosterService.canViewRoster(grade.getRoster().getId(), currentUser)); // teacher/admin
+    }
+
+
+    // === DTOs ===
+    @Data
+    @AllArgsConstructor
+    public static class StudentGpaResponse {
+        private List<SubjectGrade> subjects;
+        private float studentGpa;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class SubjectGrade {
+        private String subjectName;
+        private float gpa;
     }
 }

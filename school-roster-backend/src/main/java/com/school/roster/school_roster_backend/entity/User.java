@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,4 +54,12 @@ public class User {
     @ManyToMany(mappedBy = "students", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Roster> studentRosters;
+
+    @OneToMany
+    @JoinTable(
+            name = "lead_teacher_assignments",
+            joinColumns = @JoinColumn(name = "lead_id"),
+            inverseJoinColumns = @JoinColumn(name = "teacher_id")
+    )
+    private List<User> assignedTeachers = new ArrayList<>();
 }

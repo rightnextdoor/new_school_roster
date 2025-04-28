@@ -1,13 +1,16 @@
 package com.school.roster.school_roster_backend.controller;
 
+import com.school.roster.school_roster_backend.entity.Grade;
 import com.school.roster.school_roster_backend.entity.Roster;
 import com.school.roster.school_roster_backend.entity.User;
-import com.school.roster.school_roster_backend.entity.Grade;
 import com.school.roster.school_roster_backend.service.RosterService;
+import com.school.roster.school_roster_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,65 +22,128 @@ import java.util.stream.Collectors;
 public class RosterController {
 
     private final RosterService rosterService;
+    private final UserService userService;
 
     @PostMapping("/create")
-    public ResponseEntity<RosterResponse> createRoster(@RequestBody CreateRosterRequest request) {
-        Roster roster = rosterService.createRoster(request.getRoster(), request.getTeacherId());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<Roster> createRoster(@RequestBody Roster roster, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User teacher = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Teacher not found."));
+
+        Roster created = rosterService.createRoster(roster, teacher.getId());
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<RosterResponse> updateRoster(@RequestBody UpdateRosterRequest request) {
-        Roster roster = rosterService.updateRoster(request.getRosterId(), request.getUpdatedRoster());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<Roster> updateRoster(@RequestBody UpdateRosterRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User currentUser = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!rosterService.canEditRoster(request.getRosterId(), currentUser)) {
+            throw new RuntimeException("Access denied: You are not allowed to update this roster.");
+        }
+
+        Roster updated = rosterService.updateRoster(request.getRosterId(), request.getRosterData());
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteRoster(@RequestBody RosterIdRequest request) {
-        rosterService.deleteRoster(request.getRosterId());
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<String> deleteRoster(@RequestBody IdRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User currentUser = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!rosterService.canEditRoster(request.getId(), currentUser)) {
+            throw new RuntimeException("Access denied: You are not allowed to delete this roster.");
+        }
+
+        rosterService.deleteRoster(request.getId());
         return ResponseEntity.ok("Roster deleted successfully.");
     }
 
     @PostMapping("/addStudent")
-    public ResponseEntity<RosterResponse> addStudentToRoster(@RequestBody RosterStudentRequest request) {
-        Roster roster = rosterService.addStudentToRoster(request.getRosterId(), request.getStudentId());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<Roster> addStudentToRoster(@RequestBody AddStudentRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User currentUser = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!rosterService.canEditRoster(request.getRosterId(), currentUser)) {
+            throw new RuntimeException("Access denied: You are not allowed to add students to this roster.");
+        }
+
+        Roster updated = rosterService.addStudentToRoster(request.getRosterId(), request.getStudentId());
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/removeStudent")
-    public ResponseEntity<RosterResponse> removeStudentFromRoster(@RequestBody RosterStudentRequest request) {
-        Roster roster = rosterService.removeStudentFromRoster(request.getRosterId(), request.getStudentId());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<Roster> removeStudentFromRoster(@RequestBody AddStudentRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User currentUser = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!rosterService.canEditRoster(request.getRosterId(), currentUser)) {
+            throw new RuntimeException("Access denied: You are not allowed to remove students from this roster.");
+        }
+
+        Roster updated = rosterService.removeStudentFromRoster(request.getRosterId(), request.getStudentId());
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/reassignTeacher")
-    public ResponseEntity<RosterResponse> reassignTeacher(@RequestBody ReassignTeacherRequest request) {
-        Roster roster = rosterService.reassignTeacher(request.getRosterId(), request.getNewTeacherId());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<Roster> reassignTeacher(@RequestBody ReassignTeacherRequest request) {
+        Roster updatedRoster = rosterService.reassignTeacher(request.getRosterId(), request.getNewTeacherId());
+        return ResponseEntity.ok(updatedRoster);
     }
 
     @PostMapping("/getById")
-    public ResponseEntity<RosterResponse> getRosterById(@RequestBody RosterIdRequest request) {
-        Roster roster = rosterService.getRosterById(request.getRosterId());
-        return ResponseEntity.ok(buildRosterResponse(roster));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Roster> getRosterById(@RequestBody IdRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        User currentUser = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!rosterService.canViewRoster(request.getId(), currentUser)) {
+            throw new RuntimeException("Access denied: You are not allowed to view this roster.");
+        }
+
+        Roster roster = rosterService.getRosterById(request.getId());
+        return ResponseEntity.ok(roster);
     }
 
     @PostMapping("/getByStudent")
-    public ResponseEntity<List<RosterResponse>> getRostersByStudent(@RequestBody StudentIdRequest request) {
-        List<Roster> rosters = rosterService.getRostersByStudentId(request.getStudentId());
-        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<Roster>> getRostersByStudent(Authentication authentication) {
+        String userEmail = authentication.getName();
+        User student = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Student not found."));
+
+        List<Roster> rosters = rosterService.getRostersByStudentId(student.getId());
+        return ResponseEntity.ok(rosters);
     }
 
     @PostMapping("/getByTeacher")
-    public ResponseEntity<List<RosterResponse>> getRostersByTeacher(@RequestBody TeacherIdRequest request) {
-        List<Roster> rosters = rosterService.getRostersByTeacherId(request.getTeacherId());
-        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
+    @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
+    public ResponseEntity<List<Roster>> getRostersByTeacher(Authentication authentication) {
+        String userEmail = authentication.getName();
+        User teacher = userService.getUserByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Teacher not found."));
+
+        List<Roster> rosters = rosterService.getRostersByTeacherId(teacher.getId());
+        return ResponseEntity.ok(rosters);
     }
 
     @GetMapping("/getAll")
-    public ResponseEntity<List<RosterResponse>> getAllRosters() {
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
+    public ResponseEntity<List<Roster>> getAllRosters() {
         List<Roster> rosters = rosterService.getAllRosters();
-        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(rosters);
     }
 
     // === Build Response ===
@@ -119,6 +185,10 @@ public class RosterController {
     private static class UpdateRosterRequest {
         private Long rosterId;
         private Roster updatedRoster;
+
+        public Roster getRosterData() {
+            return updatedRoster;
+        }
     }
 
     @Data
@@ -173,5 +243,18 @@ public class RosterController {
         private String firstName;
         private String lastName;
         private Float finalGpa;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class IdRequest {
+        private Long id;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class AddStudentRequest {
+        private Long rosterId;
+        private String studentId;
     }
 }

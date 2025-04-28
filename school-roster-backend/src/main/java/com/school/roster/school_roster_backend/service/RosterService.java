@@ -8,6 +8,7 @@ import com.school.roster.school_roster_backend.repository.RosterRepository;
 import com.school.roster.school_roster_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -62,6 +63,19 @@ public class RosterService {
 
         return rosterRepository.save(roster);
     }
+
+    public boolean isStudentUnderTeacher(String teacherId, String studentId) {
+        List<Roster> rosters = rosterRepository.findByTeacherId(teacherId);
+        for (Roster roster : rosters) {
+            for (User student : roster.getStudents()) {
+                if (student.getId().equals(studentId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     // === Remove Student from Roster ===
     public Roster removeStudentFromRoster(Long rosterId, String studentId) {
@@ -152,6 +166,41 @@ public class RosterService {
     // === Get All Rosters ===
     public List<Roster> getAllRosters() {
         return rosterRepository.findAll();
+    }
+
+    public boolean canEditRoster(Long rosterId, User currentUser) {
+        Roster roster = getRosterById(rosterId);
+
+        // ✅ If the current user is the teacher assigned to the roster
+        if (roster.getTeacher() != null && roster.getTeacher().getId().equals(currentUser.getId())) {
+            return true;
+        }
+
+        // ✅ Or if user is admin, administrator, teacher_lead
+        return currentUser.getRoles().stream()
+                .anyMatch(role -> role.name().equals("ADMIN") ||
+                        role.name().equals("ADMINISTRATOR") ||
+                        role.name().equals("TEACHER_LEAD"));
+    }
+
+    public boolean canViewRoster(Long rosterId, User currentUser) {
+        Roster roster = getRosterById(rosterId);
+
+        // ✅ If the current user is the teacher assigned
+        if (roster.getTeacher() != null && roster.getTeacher().getId().equals(currentUser.getId())) {
+            return true;
+        }
+
+        // ✅ If the current user is a student in this roster
+        if (roster.getStudents().stream().anyMatch(student -> student.getId().equals(currentUser.getId()))) {
+            return true;
+        }
+
+        // ✅ Or if user is admin, administrator, office administrator
+        return currentUser.getRoles().stream()
+                .anyMatch(role -> role.name().equals("ADMIN") ||
+                        role.name().equals("ADMINISTRATOR") ||
+                        role.name().equals("OFFICE_ADMINISTRATOR"));
     }
 
 }

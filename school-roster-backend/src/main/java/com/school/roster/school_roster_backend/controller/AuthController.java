@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,7 @@ public class AuthController {
 
     // === Signup ===
     @PostMapping("/signup")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMINISTRATOR', 'ADMIN')")
     public ResponseEntity<User> signup(@RequestBody User user) {
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok(createdUser);
@@ -37,6 +39,7 @@ public class AuthController {
 
     // === Who Am I ===
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserInfoResponse> whoAmI(Authentication authentication) {
         String email = authentication.getName(); // from JWT token
 

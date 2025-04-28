@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
@@ -21,6 +22,7 @@ public class UserController {
 
     // === Get All Users ===
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
@@ -28,6 +30,7 @@ public class UserController {
 
     // === Get User by ID ===
     @PostMapping("/get")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
     public ResponseEntity<User> getUserById(@RequestBody IdRequest request) {
         return userService.getUserById(request.getId())
                 .map(ResponseEntity::ok)
@@ -36,6 +39,7 @@ public class UserController {
 
     // === Update User ===
     @PutMapping("/update")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
     public ResponseEntity<User> updateUser(@RequestBody UpdateUserRequest request) {
         User user = userService.updateUser(request.getId(), request.getUpdatedUser());
         return ResponseEntity.ok(user);
@@ -43,6 +47,7 @@ public class UserController {
 
     // === Delete User ===
     @DeleteMapping("/delete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
     public ResponseEntity<String> deleteUser(@RequestBody IdRequest request) {
         userService.deleteUser(request.getId());
         return ResponseEntity.ok("User deleted successfully.");
