@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+
 
 import java.util.List;
 
@@ -45,6 +47,18 @@ public class UserController {
         userService.deleteUser(request.getId());
         return ResponseEntity.ok("User deleted successfully.");
     }
+
+    // === Get Logged-in User Info ===
+    @PostMapping("/getMyUser")
+    public ResponseEntity<User> getMyUser(Authentication authentication) {
+        String email = authentication.getName(); // From the JWT token
+
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        return ResponseEntity.ok(user);
+    }
+
 
     // === Request DTOs ===
     @Data

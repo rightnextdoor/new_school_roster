@@ -2,12 +2,15 @@ package com.school.roster.school_roster_backend.controller;
 
 import com.school.roster.school_roster_backend.entity.NonStudentProfile;
 import com.school.roster.school_roster_backend.entity.StudentProfile;
+import com.school.roster.school_roster_backend.entity.User;
 import com.school.roster.school_roster_backend.service.ProfileService;
+import com.school.roster.school_roster_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -17,6 +20,7 @@ import java.util.List;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final UserService userService;
 
     // === Create Student Profile ===
     @PostMapping("/student/create")
@@ -63,11 +67,20 @@ public class ProfileController {
     // === GET APIs for ALL Profiles (Student or Non-Student) ===
 
     // --- Get profile by Profile ID ---
-    @PostMapping("/getById")
-    public ResponseEntity<Object> getProfileById(@RequestBody IdRequest request) {
-        Object profile = profileService.getProfileById(request.getId());
+    // === Get Student Profile by ID ===
+    @PostMapping("/student/getById")
+    public ResponseEntity<StudentProfile> getStudentProfileById(@RequestBody IdRequest request) {
+        StudentProfile profile = profileService.getStudentProfileById(request.getId());
         return ResponseEntity.ok(profile);
     }
+
+    // === Get Non-Student Profile by ID ===
+    @PostMapping("/nonstudent/getById")
+    public ResponseEntity<NonStudentProfile> getNonStudentProfileById(@RequestBody IdRequest request) {
+        NonStudentProfile profile = profileService.getNonStudentProfileById(request.getId());
+        return ResponseEntity.ok(profile);
+    }
+
 
     // --- Get profile by User ID ---
     @PostMapping("/getByUser")
@@ -85,8 +98,13 @@ public class ProfileController {
 
     // --- Get Own Profile (by logged-in User) ---
     @PostMapping("/getMyProfile")
-    public ResponseEntity<Object> getMyProfile(@RequestBody UserIdRequest request) {
-        Object profile = profileService.getProfileByUserId(request.getUserId());
+    public ResponseEntity<Object> getMyProfile(Authentication authentication) {
+        String email = authentication.getName(); // email comes from the token
+
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        Object profile = profileService.getProfileByUserId(user.getId());
         return ResponseEntity.ok(profile);
     }
 

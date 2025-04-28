@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -19,14 +20,15 @@ public class GradeController {
 
     // === Update Grade ===
     @PutMapping("/update")
-    public ResponseEntity<Grade> updateGrade(@RequestBody UpdateGradeRequest request) {
+    public ResponseEntity<GradeResponse> updateGrade(@RequestBody UpdateGradeRequest request) {
         Grade updatedGrade = gradeService.updateGrades(
-                request.getGradeId(),
+                request.getStudentId(),
+                request.getRosterId(),
                 request.getPerformanceScores(),
                 request.getQuizScores(),
                 request.getQuarterlyExamScores()
         );
-        return ResponseEntity.ok(updatedGrade);
+        return ResponseEntity.ok(buildGradeResponse(updatedGrade));
     }
 
     // === Delete Grade ===
@@ -38,30 +40,51 @@ public class GradeController {
 
     // === Get Grade by ID ===
     @PostMapping("/getById")
-    public ResponseEntity<Grade> getGradeById(@RequestBody GradeIdRequest request) {
+    public ResponseEntity<GradeResponse> getGradeById(@RequestBody GradeIdRequest request) {
         Grade grade = gradeService.getGradeById(request.getGradeId());
-        return ResponseEntity.ok(grade);
+        return ResponseEntity.ok(buildGradeResponse(grade));
     }
 
     // === Get Grades by Roster ===
     @PostMapping("/getByRoster")
-    public ResponseEntity<List<Grade>> getGradesByRoster(@RequestBody RosterIdRequest request) {
+    public ResponseEntity<List<GradeResponse>> getGradesByRoster(@RequestBody RosterIdRequest request) {
         List<Grade> grades = gradeService.getGradesByRosterId(request.getRosterId());
-        return ResponseEntity.ok(grades);
+        return ResponseEntity.ok(grades.stream().map(this::buildGradeResponse).collect(Collectors.toList()));
     }
 
     // === Get Grades by Student ===
     @PostMapping("/getByStudent")
-    public ResponseEntity<List<Grade>> getGradesByStudent(@RequestBody StudentIdRequest request) {
+    public ResponseEntity<List<GradeResponse>> getGradesByStudent(@RequestBody StudentIdRequest request) {
         List<Grade> grades = gradeService.getGradesByStudentId(request.getStudentId());
-        return ResponseEntity.ok(grades);
+        return ResponseEntity.ok(grades.stream().map(this::buildGradeResponse).collect(Collectors.toList()));
     }
 
-    // === Request DTOs ===
+    // === Build a clean readable response ===
+    private GradeResponse buildGradeResponse(Grade grade) {
+        return new GradeResponse(
+                grade.getId(),
+                grade.getFinalGpa(),
+                grade.getStudent() != null ? grade.getStudent().getId() : null,
+                grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getFirstName() : null,
+                grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getLastName() : null,
+                grade.getRoster() != null ? grade.getRoster().getId() : null,
+                grade.getRoster() != null ? grade.getRoster().getSubjectName() : null,
+                grade.getRoster() != null ? grade.getRoster().getPeriod() : null,
+                grade.getRoster() != null ? grade.getRoster().getNickname() : null,
+                grade.getRoster() != null && grade.getRoster().getTeacher() != null && grade.getRoster().getTeacher().getNonStudentProfile() != null
+                        ? grade.getRoster().getTeacher().getNonStudentProfile().getFirstName() : null,
+                grade.getRoster() != null && grade.getRoster().getTeacher() != null && grade.getRoster().getTeacher().getNonStudentProfile() != null
+                        ? grade.getRoster().getTeacher().getNonStudentProfile().getLastName() : null
+        );
+    }
+
+    // === DTOs ===
+
     @Data
     @AllArgsConstructor
     private static class UpdateGradeRequest {
-        private Long gradeId;
+        private String studentId;
+        private Long rosterId;
         private List<Float> performanceScores;
         private List<Float> quizScores;
         private List<Float> quarterlyExamScores;
@@ -83,5 +106,23 @@ public class GradeController {
     @AllArgsConstructor
     private static class StudentIdRequest {
         private String studentId;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class GradeResponse {
+        private Long gradeId;
+        private Float finalGpa;
+
+        private String studentId;
+        private String studentFirstName;
+        private String studentLastName;
+
+        private Long rosterId;
+        private String subjectName;
+        private String period;
+        private String nickname;
+        private String teacherFirstName;
+        private String teacherLastName;
     }
 }

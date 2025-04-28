@@ -3,7 +3,10 @@ package com.school.roster.school_roster_backend.service;
 import com.school.roster.school_roster_backend.entity.NonStudentProfile;
 import com.school.roster.school_roster_backend.entity.StudentProfile;
 import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.embedded.AppointmentRecord;
 import com.school.roster.school_roster_backend.entity.enums.BMICategory;
+import com.school.roster.school_roster_backend.entity.enums.Position;
+import com.school.roster.school_roster_backend.entity.enums.SalaryGrade;
 import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import com.school.roster.school_roster_backend.repository.NonStudentProfileRepository;
 import com.school.roster.school_roster_backend.repository.StudentProfileRepository;
@@ -96,7 +99,7 @@ public class ProfileService {
         if (gpa >= 98) return StudentGradeStatus.WITH_HIGHEST_HONORS;
         if (gpa >= 95) return StudentGradeStatus.WITH_HIGH_HONORS;
         if (gpa >= 90) return StudentGradeStatus.WITH_HONORS;
-        if (gpa >= 75) return StudentGradeStatus.COMPLETED_WITHOUT_HONORS;
+        if (gpa >= 75) return StudentGradeStatus.PASSED;
         return StudentGradeStatus.FAILED;
     }
 
@@ -167,6 +170,7 @@ public class ProfileService {
             nonStudentProfile.setPagIbigNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getPagIbigNumberEncrypted()));
         }
 
+        assignSalaryGrades(nonStudentProfile.getEmploymentAppointments());
 
         nonStudentProfileRepository.save(nonStudentProfile);
         userRepository.save(user);
@@ -214,6 +218,8 @@ public class ProfileService {
             existingProfile.getDependentChildren().forEach(this::updateDependentChildAge);
         }
 
+        assignSalaryGrades(existingProfile.getEmploymentAppointments());
+
         return nonStudentProfileRepository.save(existingProfile);
     }
 
@@ -221,6 +227,28 @@ public class ProfileService {
         if (child.getBirthDate() != null) {
             int years = java.time.Period.between(child.getBirthDate(), java.time.LocalDate.now()).getYears();
             child.setAge(years);
+        }
+    }
+
+    private void assignSalaryGrades(List<AppointmentRecord> appointments) {
+        if (appointments != null) {
+            for (AppointmentRecord record : appointments) {
+                if (record.getPosition() != null) {
+                    SalaryGrade salaryGradeInfo = mapPositionToSalaryGrade(record.getPosition());
+                    if (salaryGradeInfo != null) {
+                        record.setSalaryGrade(salaryGradeInfo.getSalaryGrade());
+                        record.setSalaryAmount(salaryGradeInfo.getSalaryAmount());
+                    }
+                }
+            }
+        }
+    }
+
+    private SalaryGrade mapPositionToSalaryGrade(Position position) {
+        try {
+            return SalaryGrade.valueOf(position.name());
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -240,12 +268,16 @@ public class ProfileService {
     }
 
     // === Get Profile by Profile ID (Student or NonStudent) ===
-    public Object getProfileById(Long id) {
+    public StudentProfile getStudentProfileById(Long id) {
         return studentProfileRepository.findById(id)
-                .<Object>map(profile -> profile)
-                .orElseGet(() -> nonStudentProfileRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Profile not found with ID: " + id)));
+                .orElseThrow(() -> new RuntimeException("StudentProfile not found with ID: " + id));
     }
+
+    public NonStudentProfile getNonStudentProfileById(Long id) {
+        return nonStudentProfileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("NonStudentProfile not found with ID: " + id));
+    }
+
 
     // === Get Profile by User ID ===
     public Object getProfileByUserId(String userId) {

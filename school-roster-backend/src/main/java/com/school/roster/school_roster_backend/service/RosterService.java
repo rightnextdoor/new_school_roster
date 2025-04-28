@@ -125,7 +125,7 @@ public class RosterService {
 
     // === Find Roster by ID ===
     public Roster getRosterById(Long id) {
-        return rosterRepository.findById(id)
+        return rosterRepository.findByIdWithTeacherAndStudents(id)
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + id));
     }
 

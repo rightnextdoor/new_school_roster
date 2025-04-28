@@ -1,5 +1,6 @@
 package com.school.roster.school_roster_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,8 +27,8 @@ public class Roster {
 
     @ManyToOne
     @JoinColumn(name = "teacher_id")
-    @JsonManagedReference
-    private User teacher; // Only TEACHER or TEACHER_LEAD
+    @JsonBackReference(value = "teacher-rosters")
+    private User teacher;
 
     @ManyToMany
     @JoinTable(
@@ -35,12 +36,12 @@ public class Roster {
             joinColumns = @JoinColumn(name = "roster_id"),
             inverseJoinColumns = @JoinColumn(name = "student_id")
     )
-    @JsonManagedReference
-    private List<User> students = new ArrayList<>(); // Only STUDENT role
+    @JsonBackReference(value = "student-rosters")
+    private List<User> students = new ArrayList<>();
 
     @OneToMany(mappedBy = "roster", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference(value = "roster-grades")
     private List<Grade> grades = new ArrayList<>();
 
-    private Float classGpa; // Average GPA of all students
+    private Float classGpa;
 }

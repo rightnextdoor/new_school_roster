@@ -82,6 +82,7 @@ public class NonStudentProfile {
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    @JsonBackReference
+    @JsonBackReference(value = "nonStudentProfile-user")
     private User linkedUser;
+
 }

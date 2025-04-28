@@ -22,13 +22,13 @@ public class Grade {
 
     @ManyToOne
     @JoinColumn(name = "student_id")
-    @JsonBackReference
-    private User student; // Student assigned to this grade
+    @JsonBackReference(value = "student-grades")
+    private User student;
 
     @ManyToOne
     @JoinColumn(name = "roster_id")
-    @JsonBackReference
-    private Roster roster; // Which roster/class this grade belongs to
+    @JsonBackReference(value = "roster-grades")
+    private Roster roster;
 
     @ElementCollection
     @CollectionTable(name = "grade_performance_scores", joinColumns = @JoinColumn(name = "grade_id"))
@@ -42,5 +42,5 @@ public class Grade {
     @CollectionTable(name = "grade_quarterly_exam_scores", joinColumns = @JoinColumn(name = "grade_id"))
     private List<Float> quarterlyExamScores = new ArrayList<>();
 
-    private Float finalGpa; // Auto-calculated
+    private Float finalGpa;
 }

@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,23 +23,49 @@ public class GradeService {
     private final UserRepository userRepository;
 
     // === Update Grades ===
-    public Grade updateGrades(Long gradeId, List<Float> performanceScores, List<Float> quizScores, List<Float> quarterlyExamScores) {
-        Grade grade = gradeRepository.findById(gradeId)
-                .orElseThrow(() -> new RuntimeException("Grade not found with ID: " + gradeId));
+    // === Update or Create Grade for Student in Roster ===
+    public Grade updateGrades(String studentId, Long rosterId, List<Float> performanceScores, List<Float> quizScores, List<Float> quarterlyExamScores) {
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
 
+        Roster roster = rosterRepository.findById(rosterId)
+                .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
+
+        // Try to find existing grade
+        Grade grade = roster.getGrades().stream()
+                .filter(g -> g.getStudent() != null && g.getStudent().getId().equals(studentId))
+                .findFirst()
+                .orElseGet(() -> {
+                    // Create new grade if not found
+                    Grade newGrade = Grade.builder()
+                            .student(student)
+                            .roster(roster)
+                            .performanceScores(new ArrayList<>())
+                            .quizScores(new ArrayList<>())
+                            .quarterlyExamScores(new ArrayList<>())
+                            .finalGpa(0f)
+                            .build();
+                    roster.getGrades().add(newGrade);
+                    return newGrade;
+                });
+
+        // Update grade scores
         grade.setPerformanceScores(performanceScores);
         grade.setQuizScores(quizScores);
         grade.setQuarterlyExamScores(quarterlyExamScores);
 
+        // Calculate GPA
         float finalGpa = calculateFinalGpa(performanceScores, quizScores, quarterlyExamScores);
         grade.setFinalGpa(finalGpa);
 
         gradeRepository.save(grade);
+        rosterRepository.save(roster); // Save roster to update classGpa + grade list
 
-        updateRosterClassGpa(grade.getRoster().getId());
+        updateRosterClassGpa(rosterId);
 
         return grade;
     }
+
 
     // === Calculate GPA ===
     private float calculateFinalGpa(List<Float> performance, List<Float> quizzes, List<Float> exams) {

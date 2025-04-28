@@ -1,6 +1,8 @@
 package com.school.roster.school_roster_backend.controller;
 
 import com.school.roster.school_roster_backend.entity.Roster;
+import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.Grade;
 import com.school.roster.school_roster_backend.service.RosterService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/rosters")
@@ -17,79 +20,92 @@ public class RosterController {
 
     private final RosterService rosterService;
 
-    // === Create Roster ===
     @PostMapping("/create")
-    public ResponseEntity<Roster> createRoster(@RequestBody CreateRosterRequest request) {
+    public ResponseEntity<RosterResponse> createRoster(@RequestBody CreateRosterRequest request) {
         Roster roster = rosterService.createRoster(request.getRoster(), request.getTeacherId());
-        return ResponseEntity.ok(roster);
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // === Update Roster ===
     @PutMapping("/update")
-    public ResponseEntity<Roster> updateRoster(@RequestBody UpdateRosterRequest request) {
-        Roster updated = rosterService.updateRoster(request.getRosterId(), request.getUpdatedRoster());
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<RosterResponse> updateRoster(@RequestBody UpdateRosterRequest request) {
+        Roster roster = rosterService.updateRoster(request.getRosterId(), request.getUpdatedRoster());
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // === Delete Roster ===
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteRoster(@RequestBody RosterIdRequest request) {
         rosterService.deleteRoster(request.getRosterId());
         return ResponseEntity.ok("Roster deleted successfully.");
     }
 
-    // === Add Student to Roster ===
     @PostMapping("/addStudent")
-    public ResponseEntity<Roster> addStudentToRoster(@RequestBody RosterStudentRequest request) {
-        Roster updatedRoster = rosterService.addStudentToRoster(request.getRosterId(), request.getStudentId());
-        return ResponseEntity.ok(updatedRoster);
+    public ResponseEntity<RosterResponse> addStudentToRoster(@RequestBody RosterStudentRequest request) {
+        Roster roster = rosterService.addStudentToRoster(request.getRosterId(), request.getStudentId());
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // === Remove Student from Roster ===
     @PostMapping("/removeStudent")
-    public ResponseEntity<Roster> removeStudentFromRoster(@RequestBody RosterStudentRequest request) {
-        Roster updatedRoster = rosterService.removeStudentFromRoster(request.getRosterId(), request.getStudentId());
-        return ResponseEntity.ok(updatedRoster);
+    public ResponseEntity<RosterResponse> removeStudentFromRoster(@RequestBody RosterStudentRequest request) {
+        Roster roster = rosterService.removeStudentFromRoster(request.getRosterId(), request.getStudentId());
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // === Reassign Teacher for a Roster ===
     @PostMapping("/reassignTeacher")
-    public ResponseEntity<Roster> reassignTeacher(@RequestBody ReassignTeacherRequest request) {
-        Roster updatedRoster = rosterService.reassignTeacher(request.getRosterId(), request.getNewTeacherId());
-        return ResponseEntity.ok(updatedRoster);
+    public ResponseEntity<RosterResponse> reassignTeacher(@RequestBody ReassignTeacherRequest request) {
+        Roster roster = rosterService.reassignTeacher(request.getRosterId(), request.getNewTeacherId());
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // === GET Roster Methods ===
-
-    // --- Get Roster by Roster ID ---
     @PostMapping("/getById")
-    public ResponseEntity<Roster> getRosterById(@RequestBody RosterIdRequest request) {
+    public ResponseEntity<RosterResponse> getRosterById(@RequestBody RosterIdRequest request) {
         Roster roster = rosterService.getRosterById(request.getRosterId());
-        return ResponseEntity.ok(roster);
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
 
-    // --- Get Rosters by Student ID ---
     @PostMapping("/getByStudent")
-    public ResponseEntity<List<Roster>> getRostersByStudent(@RequestBody StudentIdRequest request) {
+    public ResponseEntity<List<RosterResponse>> getRostersByStudent(@RequestBody StudentIdRequest request) {
         List<Roster> rosters = rosterService.getRostersByStudentId(request.getStudentId());
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
 
-    // --- Get Rosters by Teacher ID ---
     @PostMapping("/getByTeacher")
-    public ResponseEntity<List<Roster>> getRostersByTeacher(@RequestBody TeacherIdRequest request) {
+    public ResponseEntity<List<RosterResponse>> getRostersByTeacher(@RequestBody TeacherIdRequest request) {
         List<Roster> rosters = rosterService.getRostersByTeacherId(request.getTeacherId());
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
 
-    // --- Get All Rosters ---
     @GetMapping("/getAll")
-    public ResponseEntity<List<Roster>> getAllRosters() {
+    public ResponseEntity<List<RosterResponse>> getAllRosters() {
         List<Roster> rosters = rosterService.getAllRosters();
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
 
-    // === Request DTOs ===
+    // === Build Response ===
+    private RosterResponse buildRosterResponse(Roster roster) {
+        return new RosterResponse(
+                roster.getId(),
+                roster.getSubjectName(),
+                roster.getPeriod(),
+                roster.getNickname(),
+                roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getFirstName() : null,
+                roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getLastName() : null,
+                roster.getStudents().stream().map(student -> {
+                    Grade grade = roster.getGrades().stream()
+                            .filter(g -> g.getStudent() != null && g.getStudent().getId().equals(student.getId()))
+                            .findFirst()
+                            .orElse(null);
+                    return new StudentInfo(
+                            student.getId(),
+                            student.getStudentProfile() != null ? student.getStudentProfile().getFirstName() : null,
+                            student.getStudentProfile() != null ? student.getStudentProfile().getLastName() : null,
+                            grade != null ? grade.getFinalGpa() : null
+                    );
+                }).collect(Collectors.toList()),
+                roster.getClassGpa()
+        );
+    }
+
+    // === DTOs ===
 
     @Data
     @AllArgsConstructor
@@ -135,5 +151,27 @@ public class RosterController {
     @AllArgsConstructor
     private static class TeacherIdRequest {
         private String teacherId;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class RosterResponse {
+        private Long rosterId;
+        private String subjectName;
+        private String period;
+        private String nickname;
+        private String teacherFirstName;
+        private String teacherLastName;
+        private List<StudentInfo> students;
+        private Float classGpa;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class StudentInfo {
+        private String studentId;
+        private String firstName;
+        private String lastName;
+        private Float finalGpa;
     }
 }

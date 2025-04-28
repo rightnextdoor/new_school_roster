@@ -68,6 +68,7 @@ public class StudentProfile {
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    @JsonBackReference
+    @JsonBackReference(value = "studentProfile-user")
     private User linkedUser;
+
 }
