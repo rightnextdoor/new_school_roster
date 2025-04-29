@@ -68,13 +68,13 @@ public class UserController {
     // === Request DTOs ===
     @Data
     @AllArgsConstructor
-    private static class IdRequest {
+    public static class IdRequest {
         private String id;
     }
 
     @Data
     @AllArgsConstructor
-    private static class UpdateUserRequest {
+    public static class UpdateUserRequest {
         private String id;
         private User updatedUser;
     }

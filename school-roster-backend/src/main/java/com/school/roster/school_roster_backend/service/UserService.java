@@ -51,25 +51,35 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // === Get All Users ===
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> allUsers = userRepository.findAll();
+        return allUsers.stream()
+                .filter(user -> user.getRoles().stream()
+                        .noneMatch(role -> role.name().equalsIgnoreCase("ADMIN")))
+                .toList();
     }
 
-    // === Get User by ID ===
     public Optional<User> getUserById(String id) {
-        return userRepository.findById(id);
+        return userRepository.findById(id)
+                .filter(user -> user.getRoles().stream()
+                        .noneMatch(role -> role.name().equalsIgnoreCase("ADMIN")));
     }
 
-    // === Get User by Email ===
     public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email)
+                .filter(user -> user.getRoles().stream()
+                        .noneMatch(role -> role.name().equalsIgnoreCase("ADMIN")));
     }
 
-    // === Update Existing User (Safe Update) ===
     public User updateUser(String id, User updatedUserData) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+
+        boolean isAdmin = existingUser.getRoles().stream()
+                .anyMatch(role -> role.name().equalsIgnoreCase("ADMIN"));
+        if (isAdmin) {
+            throw new RuntimeException("Cannot update ADMIN user.");
+        }
 
         existingUser.setEmail(updatedUserData.getEmail());
 
@@ -83,6 +93,7 @@ public class UserService {
 
         return userRepository.save(existingUser);
     }
+
 
     public boolean hasRole(User user, String role) {
         return user.getRoles().stream()
@@ -103,6 +114,12 @@ public class UserService {
     public void deleteUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> role.name().equalsIgnoreCase("ADMIN"));
+        if (isAdmin) {
+            throw new RuntimeException("Cannot delete ADMIN user.");
+        }
 
         // === 1. If Teacher ➔ Validate all assigned Rosters ===
         if (user.getRoles().contains(Role.TEACHER) || user.getRoles().contains(Role.TEACHER_LEAD)) {
@@ -135,4 +152,5 @@ public class UserService {
         // === 5. Finally, Delete User ===
         userRepository.deleteById(id);
     }
+
 }

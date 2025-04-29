@@ -24,10 +24,14 @@ public class RosterService {
     private final GradeRepository gradeRepository;
 
     // === Create Roster ===
-    public Roster createRoster(Roster roster, String teacherId) {
+    public Roster createRoster(Roster incomingRoster, String teacherId) {
         User teacher = userRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found with ID: " + teacherId));
 
+        Roster roster = new Roster();
+        roster.setSubjectName(incomingRoster.getSubjectName());
+        roster.setPeriod(incomingRoster.getPeriod());
+        roster.setNickname(incomingRoster.getNickname());
         roster.setTeacher(teacher);
         roster.setStudents(new ArrayList<>());
         roster.setGrades(new ArrayList<>());
@@ -35,6 +39,8 @@ public class RosterService {
 
         return rosterRepository.save(roster);
     }
+
+
 
     // === Assign Student to Roster ===
     public Roster addStudentToRoster(Long rosterId, String studentId) {

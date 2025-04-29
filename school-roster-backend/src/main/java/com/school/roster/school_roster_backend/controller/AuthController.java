@@ -23,9 +23,20 @@ public class AuthController {
     @PostMapping("/signup")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMINISTRATOR', 'ADMIN')")
     public ResponseEntity<User> signup(@RequestBody User user) {
+        // Prevent users from assigning themselves Admin-level roles
+        if (user.getRoles() != null) {
+            boolean tryingToAddAdmin = user.getRoles().stream().anyMatch(role ->
+                    role.name().equalsIgnoreCase("ADMIN")
+            );
+            if (tryingToAddAdmin) {
+                throw new RuntimeException("You are not allowed to assign admin roles during signup.");
+            }
+        }
+
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok(createdUser);
     }
+
 
     // === Login (UPDATED to use RequestBody) ===
     @PostMapping("/login")
@@ -58,7 +69,7 @@ public class AuthController {
     // === DTOs ===
     @Data
     @AllArgsConstructor
-    private static class LoginRequest {
+    public static class LoginRequest {
         private String email;
         private String password;
     }

@@ -104,7 +104,7 @@ public class RosterController {
 
     @PostMapping("/getById")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Roster> getRosterById(@RequestBody IdRequest request, Authentication authentication) {
+    public ResponseEntity<RosterResponse> getRosterById(@RequestBody IdRequest request, Authentication authentication) {
         String userEmail = authentication.getName();
         User currentUser = userService.getUserByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found."));
@@ -114,40 +114,43 @@ public class RosterController {
         }
 
         Roster roster = rosterService.getRosterById(request.getId());
-        return ResponseEntity.ok(roster);
+        return ResponseEntity.ok(buildRosterResponse(roster));
     }
+
 
     @PostMapping("/getByStudent")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<List<Roster>> getRostersByStudent(Authentication authentication) {
+    public ResponseEntity<List<RosterResponse>> getRostersByStudent(Authentication authentication) {
         String userEmail = authentication.getName();
         User student = userService.getUserByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Student not found."));
 
         List<Roster> rosters = rosterService.getRostersByStudentId(student.getId());
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
+
 
     @PostMapping("/getByTeacher")
     @PreAuthorize("hasAnyRole('TEACHER', 'TEACHER_LEAD')")
-    public ResponseEntity<List<Roster>> getRostersByTeacher(Authentication authentication) {
+    public ResponseEntity<List<RosterResponse>> getRostersByTeacher(Authentication authentication) {
         String userEmail = authentication.getName();
         User teacher = userService.getUserByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Teacher not found."));
 
         List<Roster> rosters = rosterService.getRostersByTeacherId(teacher.getId());
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
+
 
     @GetMapping("/getAll")
     @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
-    public ResponseEntity<List<Roster>> getAllRosters() {
+    public ResponseEntity<List<RosterResponse>> getAllRosters() {
         List<Roster> rosters = rosterService.getAllRosters();
-        return ResponseEntity.ok(rosters);
+        return ResponseEntity.ok(rosters.stream().map(this::buildRosterResponse).collect(Collectors.toList()));
     }
 
     // === Build Response ===
-    private RosterResponse buildRosterResponse(Roster roster) {
+    public RosterResponse buildRosterResponse(Roster roster) {
         return new RosterResponse(
                 roster.getId(),
                 roster.getSubjectName(),
@@ -164,25 +167,20 @@ public class RosterController {
                             student.getId(),
                             student.getStudentProfile() != null ? student.getStudentProfile().getFirstName() : null,
                             student.getStudentProfile() != null ? student.getStudentProfile().getLastName() : null,
-                            grade != null ? grade.getFinalGpa() : null
+                            grade != null ? grade.getFinalGpa() : null,
+                            grade != null && grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null // 🛠 add this
                     );
                 }).collect(Collectors.toList()),
                 roster.getClassGpa()
         );
     }
 
+
     // === DTOs ===
 
     @Data
     @AllArgsConstructor
-    private static class CreateRosterRequest {
-        private Roster roster;
-        private String teacherId;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class UpdateRosterRequest {
+    public static class UpdateRosterRequest {
         private Long rosterId;
         private Roster updatedRoster;
 
@@ -193,39 +191,14 @@ public class RosterController {
 
     @Data
     @AllArgsConstructor
-    private static class RosterIdRequest {
-        private Long rosterId;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class RosterStudentRequest {
-        private Long rosterId;
-        private String studentId;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class ReassignTeacherRequest {
+    public static class ReassignTeacherRequest {
         private Long rosterId;
         private String newTeacherId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class StudentIdRequest {
-        private String studentId;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class TeacherIdRequest {
-        private String teacherId;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private static class RosterResponse {
+    public static class RosterResponse {
         private Long rosterId;
         private String subjectName;
         private String period;
@@ -238,22 +211,23 @@ public class RosterController {
 
     @Data
     @AllArgsConstructor
-    private static class StudentInfo {
+    public static class StudentInfo {
         private String studentId;
         private String firstName;
         private String lastName;
         private Float finalGpa;
+        private String finalStatus;
     }
 
     @Data
     @AllArgsConstructor
-    private static class IdRequest {
+    public static class IdRequest {
         private Long id;
     }
 
     @Data
     @AllArgsConstructor
-    private static class AddStudentRequest {
+    public static class AddStudentRequest {
         private Long rosterId;
         private String studentId;
     }

@@ -170,40 +170,40 @@ public class ProfileController {
     // === DTOs ===
     @Data
     @AllArgsConstructor
-    private static class IdRequest {
+    public static class IdRequest {
         private Long id;
     }
 
     @Data
     @AllArgsConstructor
-    private static class UserIdRequest {
+    public static class UserIdRequest {
         private String userId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class CreateStudentProfileRequest {
+    public static class CreateStudentProfileRequest {
         private String userId;
         private StudentProfile studentProfile;
     }
 
     @Data
     @AllArgsConstructor
-    private static class UpdateStudentProfileRequest {
+    public static class UpdateStudentProfileRequest {
         private Long profileId;
         private StudentProfile updatedProfile;
     }
 
     @Data
     @AllArgsConstructor
-    private static class CreateNonStudentProfileRequest {
+    public static class CreateNonStudentProfileRequest {
         private String userId;
         private NonStudentProfile nonStudentProfile;
     }
 
     @Data
     @AllArgsConstructor
-    private static class UpdateNonStudentProfileRequest {
+    public static class UpdateNonStudentProfileRequest {
         private Long profileId;
         private NonStudentProfile updatedProfile;
     }

@@ -80,6 +80,13 @@ public class ProfileService {
         existingProfile.setSchoolHistories(updatedData.getSchoolHistories());
         existingProfile.setNutritionalStatus(updatedData.getNutritionalStatus());
 
+        existingProfile.setMotherFirstName(updatedData.getMotherFirstName());
+        existingProfile.setMotherMiddleName(updatedData.getMotherMiddleName());
+        existingProfile.setMotherMaidenName(updatedData.getMotherMaidenName());
+        existingProfile.setFatherFirstName(updatedData.getFatherFirstName());
+        existingProfile.setFatherMiddleName(updatedData.getFatherMiddleName());
+        existingProfile.setFatherLastName(updatedData.getFatherLastName());
+
         if (existingProfile.getSchoolHistories() != null) {
             existingProfile.getSchoolHistories().forEach(history -> {
                 if (history.getGpa() != null) {
@@ -194,6 +201,7 @@ public class ProfileService {
         existingProfile.setPhoneNumbers(updatedData.getPhoneNumbers());
         existingProfile.setSpouseFirstName(updatedData.getSpouseFirstName());
         existingProfile.setSpouseMiddleName(updatedData.getSpouseMiddleName());
+        existingProfile.setAddress(updatedData.getAddress());
         existingProfile.setSpouseLastName(updatedData.getSpouseLastName());
         existingProfile.setSpouseOccupation(updatedData.getSpouseOccupation());
         existingProfile.setDependentChildren(updatedData.getDependentChildren());

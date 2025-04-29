@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,4 +44,7 @@ public class Grade {
     private List<Float> quarterlyExamScores = new ArrayList<>();
 
     private Float finalGpa;
+
+    @Enumerated(EnumType.STRING)
+    private StudentGradeStatus finalStatus;
 }

@@ -115,6 +115,7 @@ public class GradeController {
         return new GradeResponse(
                 grade.getId(),
                 grade.getFinalGpa(),
+                grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null, // 🛠 new
                 grade.getStudent() != null ? grade.getStudent().getId() : null,
                 grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getFirstName() : null,
                 grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getLastName() : null,
@@ -129,10 +130,11 @@ public class GradeController {
         );
     }
 
+
     // === DTOs ===
     @Data
     @AllArgsConstructor
-    private static class UpdateGradeRequest {
+    public static class UpdateGradeRequest {
         private String studentId;
         private Long rosterId;
         private List<Float> performanceScores;
@@ -142,27 +144,28 @@ public class GradeController {
 
     @Data
     @AllArgsConstructor
-    private static class GradeIdRequest {
+    public static class GradeIdRequest {
         private Long gradeId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class RosterIdRequest {
+    public static class RosterIdRequest {
         private Long rosterId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class StudentIdRequest {
+    public static class StudentIdRequest {
         private String studentId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class GradeResponse {
+    public static class GradeResponse {
         private Long gradeId;
         private Float finalGpa;
+        private String finalStatus;
         private String studentId;
         private String studentFirstName;
         private String studentLastName;

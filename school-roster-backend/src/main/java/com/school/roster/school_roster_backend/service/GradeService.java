@@ -3,6 +3,7 @@ package com.school.roster.school_roster_backend.service;
 import com.school.roster.school_roster_backend.entity.Grade;
 import com.school.roster.school_roster_backend.entity.Roster;
 import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import com.school.roster.school_roster_backend.repository.GradeRepository;
 import com.school.roster.school_roster_backend.repository.RosterRepository;
 import com.school.roster.school_roster_backend.repository.UserRepository;
@@ -61,6 +62,8 @@ public class GradeService {
         float finalGpa = calculateFinalGpa(performanceScores, quizScores, quarterlyExamScores);
         grade.setFinalGpa(finalGpa);
 
+        grade.setFinalStatus(calculateGradeStatus(finalGpa));
+
         gradeRepository.save(grade);
         rosterRepository.save(roster); // Save roster to update classGpa + grade list
 
@@ -68,6 +71,16 @@ public class GradeService {
 
         return grade;
     }
+
+    private StudentGradeStatus calculateGradeStatus(Float gpa) {
+        if (gpa == null) return StudentGradeStatus.FAILED;
+        if (gpa >= 98) return StudentGradeStatus.WITH_HIGHEST_HONORS;
+        if (gpa >= 95) return StudentGradeStatus.WITH_HIGH_HONORS;
+        if (gpa >= 90) return StudentGradeStatus.WITH_HONORS;
+        if (gpa >= 75) return StudentGradeStatus.PASSED;
+        return StudentGradeStatus.FAILED;
+    }
+
 
 
     // === Calculate GPA ===

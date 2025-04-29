@@ -57,14 +57,14 @@ public class TeacherLeadController {
 
     @Data
     @AllArgsConstructor
-    private static class ManageTeacherRequest {
+    public static class ManageTeacherRequest {
         private String leadId;
         private String teacherId;
     }
 
     @Data
     @AllArgsConstructor
-    private static class LeadIdRequest {
+    public static class LeadIdRequest {
         private String leadId;
     }
 }
