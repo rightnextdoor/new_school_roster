@@ -1,8 +1,12 @@
+// src/pages/DashboardPage.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import WeatherWidget from '../components/weather/WeatherWidget';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { token } = useAuth(); // still available if you need it later
+
+  // Graph selector (unchanged)
   const [graphType, setGraphType] = useState<'bar' | 'pie'>('bar');
 
   return (
@@ -13,12 +17,10 @@ export default function DashboardPage() {
         <div className="bg-white p-4 rounded-md shadow-md">
           <h2 className="text-lg font-semibold mb-2">User Info</h2>
           <div className="flex flex-col items-center space-y-3">
-            <div className="w-36 h-36 rounded-full bg-gray-300"></div>
+            <div className="w-36 h-36 rounded-full bg-gray-300" />
             <div className="text-center">
-              <p className="text-xl font-medium">
-                {user?.name || 'Kevin Pratt'}
-              </p>
-              <p className="text-gray-600">{user?.role || 'Teacher'}</p>
+              <p className="text-xl font-medium">John Doe</p>
+              <p className="text-gray-600">Teacher</p>
               <button className="mt-2 text-sm text-blue-600 hover:underline">
                 View Profile
               </button>
@@ -26,7 +28,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Sidebar Navigation Links */}
+        {/* Nav Links */}
         <nav className="space-y-2">
           <a
             href="/dashboard"
@@ -49,24 +51,21 @@ export default function DashboardPage() {
         </nav>
       </aside>
 
-      {/* Content Area */}
+      {/* Main Content */}
       <div className="flex-1 p-8 space-y-6">
-        {/* Top Widgets (Calendar and Weather) */}
+        {/* Top Row: Calendar & Weather */}
         <div className="flex justify-end space-x-4">
-          {/* Calendar */}
-          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col justify-center">
+          {/* Calendar Card */}
+          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col">
             <h2 className="text-lg font-semibold">Calendar</h2>
             <div className="mt-2 bg-gray-50 p-3 rounded h-full flex items-center justify-center">
               <p className="text-gray-600">[Calendar Placeholder]</p>
             </div>
           </div>
 
-          {/* Weather */}
-          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col justify-center">
-            <h2 className="text-lg font-semibold">Weather</h2>
-            <div className="mt-2 bg-gray-50 p-3 rounded h-full flex items-center justify-center">
-              <p className="text-gray-600">[Weather Placeholder]</p>
-            </div>
+          {/* Weather Card replaced with WeatherWidget */}
+          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col">
+            <WeatherWidget />
           </div>
         </div>
 
@@ -85,7 +84,7 @@ export default function DashboardPage() {
           </div>
           <div className="mt-4 h-40 bg-gray-100 rounded-md flex items-center justify-center">
             <p className="text-gray-500">
-              [Graph Placeholder - {graphType.toUpperCase()}]
+              [Graph Placeholder – {graphType.toUpperCase()}]
             </p>
           </div>
         </section>

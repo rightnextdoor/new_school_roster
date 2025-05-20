@@ -13,7 +13,13 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["jest", "node"],
+    "typeRoots": ["src/types", "node_modules/@types"],
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "include": ["src"]
 }

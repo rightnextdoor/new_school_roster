@@ -8,8 +8,17 @@ import React, {
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
+interface User {
+  id: string;
+  email: string;
+  roles: string[];
+  name?: string; // adjust if your backend returns name/role differently
+  role?: string;
+}
+
 interface AuthContextType {
   token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -17,20 +26,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds
+const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem('token')
   );
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  // Helper: Update last active time
+  // Fetch current user
+  const fetchMe = async () => {
+    try {
+      const resp = await api.get<User>('/api/auth/me');
+      setUser(resp.data);
+    } catch {
+      logout();
+    }
+  };
+
+  // Update last active timestamp
   const updateLastActive = () => {
     localStorage.setItem('lastActive', Date.now().toString());
   };
 
-  // Check if the session has expired
+  // Session timeout checker
   const checkSessionTimeout = () => {
     const lastActive = parseInt(localStorage.getItem('lastActive') || '0', 10);
     if (Date.now() - lastActive > SESSION_TIMEOUT) {
@@ -40,52 +60,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Auto-login if token exists
+  // Auto-login and fetch "me"
   useEffect(() => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchMe();
       navigate('/dashboard');
     }
   }, [token, navigate]);
 
-  // Set up session timeout checker
+  // Poll for inactivity
   useEffect(() => {
-    const interval = setInterval(checkSessionTimeout, 1000 * 60); // Check every minute
+    const interval = setInterval(checkSessionTimeout, 60_000);
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for user activity to reset the session timeout
+  // Reset timeout on activity
   useEffect(() => {
-    const handleActivity = () => updateLastActive();
-    window.addEventListener('mousemove', handleActivity);
-    window.addEventListener('keydown', handleActivity);
-
+    const onActivity = () => updateLastActive();
+    window.addEventListener('mousemove', onActivity);
+    window.addEventListener('keydown', onActivity);
     return () => {
-      window.removeEventListener('mousemove', handleActivity);
-      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('mousemove', onActivity);
+      window.removeEventListener('keydown', onActivity);
     };
   }, []);
 
-  // Login function
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/api/auth/login', { email, password });
-      const token = response.data;
-
-      setToken(token);
-      localStorage.setItem('token', token); // Persist token
+      const resp = await api.post<string>('/api/auth/login', {
+        email,
+        password,
+      });
+      const tok = resp.data;
+      setToken(tok);
+      localStorage.setItem('token', tok);
       updateLastActive();
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${tok}`;
+      await fetchMe();
       navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Login failed', error);
-      alert('Invalid credentials. Please try again.');
+    } catch (err) {
+      console.error('Login failed', err);
+      alert('Invalid credentials');
     }
   };
 
-  // Logout function
   const logout = () => {
     setToken(null);
+    setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('lastActive');
     delete api.defaults.headers.common['Authorization'];
@@ -94,7 +116,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ token, isAuthenticated: !!token, login, logout }}
+      value={{
+        token,
+        user,
+        isAuthenticated: !!token,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -102,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be inside AuthProvider');
+  return ctx;
 };

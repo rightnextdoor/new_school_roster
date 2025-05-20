@@ -32,9 +32,22 @@ export default function AuthLayout() {
         </div>
       </div>
 
-      {/* Right: login form */}
-      <div className="w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <Outlet />
+      {/* Right: Picture and Login Form */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-gray-50 p-8">
+        {/* Top Half: School Background Image */}
+        <div
+          className="w-full h-1/2 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('/src/assets/school-background.jpg')`,
+          }}
+        ></div>
+
+        {/* Login Box */}
+        <div className="mt-6 w-full max-w-lg">
+          {' '}
+          {/* Added margin-top to move it down */}
+          <Outlet />
+        </div>
       </div>
     </div>
   );

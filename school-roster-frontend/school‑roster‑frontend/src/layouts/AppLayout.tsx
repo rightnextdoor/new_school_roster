@@ -1,6 +1,13 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AppLayout() {
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Top Navbar with School Name */}
@@ -10,24 +17,24 @@ export default function AppLayout() {
             Sibonga Central Elementary School
           </span>
           <div className="space-x-4">
-            <a href="/dashboard" className="hover:text-green-300">
+            <Link to="/dashboard" className="hover:text-green-300">
               Dashboard
-            </a>
-            <a href="/rosters" className="hover:text-green-300">
+            </Link>
+            <Link to="/rosters" className="hover:text-green-300">
               Rosters
-            </a>
-            <a href="/grades" className="hover:text-green-300">
+            </Link>
+            <Link to="/grades" className="hover:text-green-300">
               Grades
-            </a>
+            </Link>
           </div>
         </div>
         <div>
-          <a
-            href="/login"
+          <button
+            onClick={handleLogout}
             className="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600"
           >
             Logout
-          </a>
+          </button>
         </div>
       </nav>
 

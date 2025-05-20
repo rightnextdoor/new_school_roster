@@ -17,6 +17,9 @@ function PrivateRoute({ children }: { children: ReactNode }) {
 export default function Router() {
   return (
     <Routes>
+      {/* Redirect root to login */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       {/* Public Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
@@ -32,6 +35,9 @@ export default function Router() {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
       </Route>
+
+      {/* Fallback: any unknown URL → login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

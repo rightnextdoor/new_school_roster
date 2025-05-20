@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@keyframes gradientBG {
+  0% {
+    background: linear-gradient(45deg, #6b46c1, #38b2ac);
+  }
+  50% {
+    background: linear-gradient(45deg, #38b2ac, #f6e05e);
+  }
+  100% {
+    background: linear-gradient(45deg, #6b46c1, #38b2ac);
+  }
+}

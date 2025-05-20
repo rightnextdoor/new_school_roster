@@ -17,7 +17,6 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<FormValues>();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
@@ -29,9 +28,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="bg-white shadow-md rounded-lg px-8 py-10">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Welcome Back</h2>
+    <div className="w-full max-w-md mx-auto bg-gray-200 p-8 rounded-lg shadow-lg">
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+          Welcome Back
+        </h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label
@@ -81,6 +82,14 @@ export default function LoginPage() {
           >
             Log In
           </button>
+          <div className="flex justify-between items-center mt-4">
+            <a href="#" className="text-blue-600 hover:underline text-sm">
+              Forgot Password?
+            </a>
+            <a href="#" className="text-gray-600 text-sm">
+              Facebook
+            </a>
+          </div>
         </form>
       </div>
     </div>

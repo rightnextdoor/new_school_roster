@@ -1,0 +1,12 @@
+{
+  "name": "school-roster",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm:frontend\" \"npm:backend\"",
+    "frontend": "cd school‑roster‑frontend && npm run dev",
+    "backend": "cd backend-server    && npm run dev"
+  }
+}
