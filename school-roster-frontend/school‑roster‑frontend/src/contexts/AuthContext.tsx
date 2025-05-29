@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 import React, {
   createContext,
   useContext,
@@ -12,20 +13,18 @@ interface User {
   id: string;
   email: string;
   roles: string[];
-  name?: string; // adjust if your backend returns name/role differently
-  role?: string;
 }
 
 interface AuthContextType {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
+  authLoading: boolean; // ← new flag
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -33,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.getItem('token')
   );
   const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true); // ← start loading
   const navigate = useNavigate();
 
   // Fetch current user
@@ -60,13 +60,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Auto-login and fetch "me"
+  // Auto-login and fetch "me", then turn off loading
   useEffect(() => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchMe();
-      navigate('/dashboard');
-    }
+    (async () => {
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        await fetchMe();
+        if (location.pathname === '/login') {
+          navigate('/dashboard');
+        }
+      }
+      setAuthLoading(false); // ← done restoring
+    })();
   }, [token, navigate]);
 
   // Poll for inactivity
@@ -75,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Reset timeout on activity
+  // Reset timeout on user activity
   useEffect(() => {
     const onActivity = () => updateLastActive();
     window.addEventListener('mousemove', onActivity);
@@ -120,6 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         token,
         user,
         isAuthenticated: !!token,
+        authLoading, // ← expose it
         login,
         logout,
       }}

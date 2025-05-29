@@ -17,7 +17,7 @@ public class SchoolYearHistory {
     private LocalDate schoolYearStart;
     private LocalDate schoolYearEnd;
 
-    private List<String> sectionNicknames;
+    private String sectionNicknames;
     private boolean completed;
     private Float gpa;
     private StudentGradeStatus gradeStatus;

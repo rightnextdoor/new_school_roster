@@ -94,6 +94,10 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
+    public List<User> getUsersByRole(String roleName) {
+        Role role = Role.valueOf(roleName);
+        return userRepository.findAllByRoles(role);
+    }
 
     public boolean hasRole(User user, String role) {
         return user.getRoles().stream()

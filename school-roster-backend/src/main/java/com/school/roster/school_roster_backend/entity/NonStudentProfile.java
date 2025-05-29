@@ -75,7 +75,8 @@ public class NonStudentProfile {
     private List<EducationRecord> educationalBackground;
 
     private String departmentOfEducationEmail;
-
+    @Lob
+    @Column(name = "profile_picture", columnDefinition = "LONGTEXT")
     private String profilePicture;
 
     private String gradeLevel; // Required for TEACHER and TEACHER_LEAD

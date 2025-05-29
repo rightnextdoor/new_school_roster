@@ -1,0 +1,182 @@
+/* src/components/profile/profile.css */
+
+/* Container & layout */
+.profile-container {
+  display: flex;
+}
+.profile-nav {
+  width: 200px;
+  background: #fff;
+  border-right: 1px solid #e1e3e8;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 24px;
+  overflow-y: auto;
+}
+.profile-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.profile-nav li {
+  margin-bottom: 16px;
+}
+.profile-nav a {
+  color: #555;
+  font-size: 15px; /* up from 14px */
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.profile-nav a:hover {
+  color: #008891;
+}
+
+.profile-main {
+  flex: 1;
+  background: #f5f6f8;
+  padding: 48px 24px 24px;
+  overflow-y: auto;
+}
+
+/* Header & avatar */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #ddd;
+}
+.profile-details h2 {
+  margin: 0;
+  font-size: 34px; /* up from 32px */
+}
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  background: #008891;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 15px; /* up from 14px */
+}
+.teal-button {
+  margin-left: auto;
+  background: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 15px; /* up from 14px */
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+.card header {
+  background: #008891;
+  color: #fff;
+  padding: 14px 18px; /* slightly more padding */
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  font-size: 18px; /* up from 16px */
+}
+.card .content {
+  padding: 18px; /* slightly more padding */
+  font-size: 16px; /* up from 14px */
+  line-height: 1.6; /* match increased size */
+}
+
+/* Anchor offset */
+section {
+  scroll-margin-top: 100px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-dialog {
+  background: #fff;
+  padding: 24px;
+  border-radius: 6px;
+  max-width: 400px;
+  width: 90%;
+}
+.modal-dialog h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+.modal-dialog p {
+  margin: 16px 0;
+}
+.modal-actions {
+  text-align: right;
+}
+.modal-actions button {
+  margin-left: 8px;
+}
+
+/* Make the address input full-width (or give it a larger max width) */
+.address-input {
+  width: 100%;
+  max-width: 500px; /* adjust as desired */
+  box-sizing: border-box;
+}
+
+/* Override Google’s dropdown container to match the input width */
+.pac-container {
+  width: 100% !important;
+  max-width: 500px !important; /* same as above */
+  box-sizing: border-box;
+}
+
+/* Optional: increase font size in the suggestions for readability */
+.pac-item,
+.pac-item span {
+  font-size: 16px !important;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #007b7a; /* adjust to match your theme */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: auto; /* centers in flex or block containers */
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error banner */
+.error-banner {
+  background: #fdecea; /* light red background */
+  color: #611a15; /* dark red text */
+  border: 1px solid #f5c6cb; /* slightly darker red border */
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  text-align: center;
+}

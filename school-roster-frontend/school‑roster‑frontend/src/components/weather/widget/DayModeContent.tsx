@@ -12,6 +12,7 @@ export interface DayModeContentProps {
   color: string;
   alertColor: string;
   city: string;
+  timezone: string;
   description: string;
   sunriseMs: number;
   sunsetMs: number;
@@ -26,6 +27,7 @@ const DayModeContent: React.FC<DayModeContentProps> = ({
   color,
   alertColor,
   city,
+  timezone,
   description,
   sunriseMs,
   sunsetMs,
@@ -34,22 +36,24 @@ const DayModeContent: React.FC<DayModeContentProps> = ({
   iconCode,
   alerts,
 }) => {
-  // temperature display: round Celsius to whole number
+  // temperature display
   const display = unit === '°F' ? `${tempF}°F` : `${Math.round(tempC)}°C`;
 
-  // current date/time
+  // now in city’s timezone
   const now = new Date();
   const dateStr = now.toLocaleDateString([], {
+    timeZone: timezone,
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
   const timeStr = now.toLocaleTimeString([], {
+    timeZone: timezone,
     hour: '2-digit',
     minute: '2-digit',
   });
 
-  // compute next sunrise/sunset countdown
+  // next sunrise/sunset countdown (unchanged)
   const sunriseDate = new Date(sunriseMs);
   const sunsetDate = new Date(sunsetMs);
   let nextEvent = sunriseDate;
@@ -125,7 +129,7 @@ const DayModeContent: React.FC<DayModeContentProps> = ({
         <p className="text-sm font-medium">{nextText}</p>
       </div>
 
-      {/* Bottom-right: date & time */}
+      {/* Bottom-right: date & local time */}
       <div className="absolute bottom-4 right-4 text-right" style={{ color }}>
         <p className="text-sm opacity-80">{dateStr}</p>
         <p className="text-3xl font-semibold leading-none">{timeStr}</p>

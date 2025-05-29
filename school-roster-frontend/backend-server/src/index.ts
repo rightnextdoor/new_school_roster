@@ -1,6 +1,7 @@
 // src/index.ts
 
 import express, { Request, Response, NextFunction } from 'express';
+import configRoutes from './routes/configRoutes';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 
@@ -85,6 +86,15 @@ app.get(
     }
   }
 );
+
+// === New Config Routes ===
+app.use('/api/config', configRoutes);
+
+// === Global Error Handler (optional) ===
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
 
 app.listen(PORT, () => {
   console.log(`🌤️ Weather proxy listening on http://localhost:${PORT}`);

@@ -1,31 +1,107 @@
 // src/pages/DashboardPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import WeatherWidget from '../components/weather/WeatherWidget';
+import { getMyProfile } from '../services/profileApi';
+import type {
+  StudentProfile,
+  NonStudentProfile,
+} from '../components/profile/types';
 
 export default function DashboardPage() {
-  const { token } = useAuth(); // still available if you need it later
+  const { user, authLoading } = useAuth();
+  const navigate = useNavigate();
 
-  // Graph selector (unchanged)
+  const [profile, setProfile] = useState<
+    StudentProfile | NonStudentProfile | null
+  >(null);
+
+  // only fetch once we've determined auth state
+  useEffect(() => {
+    if (!authLoading) {
+      getMyProfile()
+        .then(setProfile)
+        .catch(() => setProfile(null));
+    }
+  }, [authLoading]);
+
   const [graphType, setGraphType] = useState<'bar' | 'pie'>('bar');
 
+  if (authLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center">Loading…</div>
+    );
+  }
+
+  // pick the right photo URL
+  const photoUrl = profile?.profilePicture ?? '/placeholder-avatar.png';
+
+  // display name or fallback
+  const displayName = profile
+    ? [profile.firstName, profile.middleName, profile.lastName]
+        .filter(Boolean)
+        .join(' ')
+    : 'Profile needs to be updated';
+
+  // pull role out of user.roles
+  const displayRole = user?.roles?.length
+    ? user.roles.join(', ').replace(/_/g, ' ')
+    : 'User';
+
+  // if still checking auth, you could show a loader here
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">Loading…</div>
+    );
+  }
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <aside className="w-1/4 bg-gray-100 p-4 space-y-4 shadow-md">
-        {/* User Info */}
         <div className="bg-white p-4 rounded-md shadow-md">
           <h2 className="text-lg font-semibold mb-2">User Info</h2>
-          <div className="flex flex-col items-center space-y-3">
-            <div className="w-36 h-36 rounded-full bg-gray-300" />
-            <div className="text-center">
-              <p className="text-xl font-medium">John Doe</p>
-              <p className="text-gray-600">Teacher</p>
-              <button className="mt-2 text-sm text-blue-600 hover:underline">
-                View Profile
-              </button>
+
+          {profile ? (
+            <div className="flex flex-col items-center space-y-3">
+              <img
+                src={photoUrl}
+                alt="Profile"
+                className="w-36 h-36 rounded-full object-cover bg-gray-200"
+              />
+              <div className="text-center">
+                <p className="text-xl font-medium">{displayName}</p>
+                <p className="text-gray-600">{displayRole}</p>
+                <button
+                  onClick={() =>
+                    navigate(`/profile/${user?.id}`, {
+                      state: { from: '/dashboard' },
+                    })
+                  }
+                  className="mt-2 text-sm text-teal-600 hover:underline"
+                >
+                  View Profile
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-3">
+              <div className="w-36 h-36 rounded-full bg-gray-200 flex items-center justify-center">
+                <p className="text-gray-500">No Profile</p>
+              </div>
+              <div className="text-center">
+                <button
+                  onClick={() =>
+                    navigate(`/profile/${user?.id}`, {
+                      state: { from: '/dashboard' },
+                    })
+                  }
+                  className="mt-2 text-sm text-teal-600 hover:underline"
+                >
+                  Create Profile
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Nav Links */}
@@ -63,9 +139,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Weather Card replaced with WeatherWidget */}
+          {/* Weather Card */}
           <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col">
-            <WeatherWidget />
+            <WeatherWidget
+              userId={user!.id}
+              defaultCity={profile?.address.cityMunicipality}
+            />
           </div>
         </div>
 

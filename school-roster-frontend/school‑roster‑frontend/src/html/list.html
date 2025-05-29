@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>All Students (Mockup)</title>
+    <style>
+      body {
+        background: #f5f6f8;
+        font-family: sans-serif;
+        font-size: 20px;
+      }
+      nav {
+        background: #fff;
+        padding: 16px 32px;
+        border-bottom: 1px solid #e1e3e8;
+      }
+      nav a {
+        color: #008891;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 24px;
+        cursor: default; /* make clear it’s not a live link */
+      }
+      .container {
+        padding: 64px 32px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .card header {
+        background: #008891;
+        color: #fff;
+        padding: 24px 32px;
+        font-size: 32px;
+        text-align: center;
+      }
+      .card .content {
+        padding: 32px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 24px;
+      }
+      th,
+      td {
+        padding: 32px 24px;
+        text-align: left;
+        border-bottom: 1px solid #e1e3e8;
+        vertical-align: middle;
+      }
+      th {
+        background: #f5f6f8;
+        font-weight: 600;
+      }
+      tr:hover {
+        background: rgba(0, 136, 145, 0.05);
+      }
+      .avatar-sm {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #e1e3e8;
+        display: inline-block;
+      }
+      .btn {
+        background-color: #008891;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 16px 32px;
+        font-size: 20px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .btn + .btn {
+        margin-left: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav>
+      <a href="#">Students</a>
+    </nav>
+
+    <div class="container">
+      <section class="card">
+        <header>All Students</header>
+        <div class="content">
+          <table>
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Student Name</th>
+                <th>User ID</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="avatar-sm"></div></td>
+                <td>Alice Marie Johnson</td>
+                <td>U1001</td>
+                <td>
+                  <a class="btn" href="#">View Profile</a>
+                  <a class="btn" href="#">Edit Profile</a>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="avatar-sm"></div></td>
+                <td>Bob Allen Martinez</td>
+                <td>U1002</td>
+                <td>
+                  <a class="btn" href="#">Create Profile</a>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="avatar-sm"></div></td>
+                <td>Carla Denise Nguyen</td>
+                <td>U1003</td>
+                <td>
+                  <a class="btn" href="#">View Profile</a>
+                  <a class="btn" href="#">Edit Profile</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

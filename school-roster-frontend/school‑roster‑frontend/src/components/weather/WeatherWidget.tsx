@@ -19,9 +19,9 @@ function hexToRgb(hex: string): [number, number, number] {
 
 const defaultSettings: Settings = {
   citySearch: '',
-  unit: '°F',
+  unit: '°C',
   mode: 'day',
-  animations: false,
+  animations: true,
   bgStyle: 'solid',
   solidColor: '#3b82f6',
   gradientStart: '#3b82f6',
@@ -40,24 +40,42 @@ const defaultSettings: Settings = {
   },
 };
 
-export default function WeatherWidget() {
+export interface WeatherWidgetProps {
+  userId: string;
+  defaultCity?: string; // will use London if not provided
+}
+
+export default function WeatherWidget({
+  userId,
+  defaultCity = 'London',
+}: WeatherWidgetProps) {
+  const settingsKey = `weatherSettings_${userId}`;
+
+  // load or initialize settings (seed citySearch with defaultCity)
   const [settings, setSettings] = useState<Settings>(() => {
     try {
-      const stored = localStorage.getItem('weatherSettings');
-      return stored ? JSON.parse(stored) : defaultSettings;
+      const stored = localStorage.getItem(settingsKey);
+      return stored
+        ? JSON.parse(stored)
+        : { ...defaultSettings, citySearch: defaultCity };
     } catch {
-      return defaultSettings;
+      return { ...defaultSettings, citySearch: defaultCity };
     }
   });
+
   const [showSettings, setShowSettings] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const { city, data, error } = useWeather(settings.citySearch);
+  const { city, data, error } = useWeather(
+    settings.citySearch,
+    userId,
+    defaultCity
+  );
 
   // persist settings
   useEffect(() => {
-    localStorage.setItem('weatherSettings', JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem(settingsKey, JSON.stringify(settings));
+  }, [settings, settingsKey]);
 
   // lock scroll when modal open
   useEffect(() => {
@@ -153,7 +171,8 @@ export default function WeatherWidget() {
                 unit={settings.unit}
                 color={contrastColor}
                 alertColor={alertColorFinal}
-                city={city ?? ''}
+                city={city ?? defaultCity}
+                timezone={data.timezone} // ← pass the API’s timezone string
                 description={data.current.weather[0]?.description ?? ''}
                 sunriseMs={data.current.sunrise * 1000}
                 sunsetMs={data.current.sunset * 1000}

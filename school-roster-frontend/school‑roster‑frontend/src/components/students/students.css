@@ -1,0 +1,92 @@
+/* src/components/students/students.css */
+
+/* Container & Layout */
+.students-container {
+  background: #f5f6f8;
+  padding: 64px 32px;
+  min-height: 100vh;
+}
+
+.students-card {
+  width: 100%; /* span full width of the container */
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 24px;
+}
+
+.students-card header {
+  background: #008891;
+  color: #fff;
+  padding: 24px 32px;
+  font-size: 32px;
+  text-align: center;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.students-card .content {
+  padding: 32px;
+  overflow-x: auto; /* allow horizontal scroll if needed */
+}
+
+/* Table Styles */
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 24px;
+  table-layout: auto; /* let columns size by content */
+}
+
+.students-table th,
+.students-table td {
+  padding: 32px 24px;
+  text-align: left;
+  border-bottom: 1px solid #e1e3e8;
+  vertical-align: middle;
+}
+
+.students-table th {
+  background: #f5f6f8;
+  font-weight: 600;
+}
+
+/* Prevent action buttons from wrapping */
+.students-table td:last-child {
+  white-space: nowrap;
+}
+
+.students-table tbody tr:hover {
+  background: rgba(0, 136, 145, 0.05);
+}
+
+/* Avatar Cell */
+.avatar-sm {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #e1e3e8;
+  display: inline-block;
+}
+
+/* Action Link / Button */
+.students-link {
+  background-color: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 16px 32px;
+  font-size: 20px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin-right: 16px;
+}
+
+.students-link:last-child {
+  margin-right: 0;
+}
+
+.students-link:hover {
+  opacity: 0.9;
+}

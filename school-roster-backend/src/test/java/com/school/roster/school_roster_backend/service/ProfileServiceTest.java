@@ -691,7 +691,7 @@ class ProfileServiceTest {
         history.setGradeLevel("10");
         history.setSchoolYearStart(LocalDate.of(2022, 6, 1));
         history.setSchoolYearEnd(LocalDate.of(2023, 3, 15));
-        history.setSectionNicknames(List.of("A", "B"));
+        history.setSectionNicknames("A");
         history.setCompleted(true);
         history.setGpa(94f);
 
@@ -713,7 +713,7 @@ class ProfileServiceTest {
         student.setNutritionalStatus(nutrition);
         student.setGradeLevel("10");
         student.setFirstAttendanceDate(LocalDate.of(2021, 6, 10));
-        student.setSchoolPicture("photo.jpg");
+        student.setProfilePicture("photo.jpg");
         student.setMotherFirstName("Maria");
         student.setMotherMiddleName("Lopez");
         student.setMotherMaidenName("Santos");
@@ -845,13 +845,13 @@ class ProfileServiceTest {
         history.setSchoolAddress(eduAddress);
         history.setSchoolYearStart(LocalDate.of(2020, 6, 1));
         history.setSchoolYearEnd(LocalDate.of(2021, 3, 30));
-        history.setSectionNicknames(List.of("Red", "Blue"));
+        history.setSectionNicknames("Red");
         history.setCompleted(true);
 
         assertEquals("123 College Ave", history.getSchoolAddress().getStreetAddress());
         assertEquals(LocalDate.of(2020, 6, 1), history.getSchoolYearStart());
         assertEquals(LocalDate.of(2021, 3, 30), history.getSchoolYearEnd());
-        assertEquals(List.of("Red", "Blue"), history.getSectionNicknames());
+        assertEquals("Red", history.getSectionNicknames());
         assertTrue(history.isCompleted());
 
         // === DependentChild ===

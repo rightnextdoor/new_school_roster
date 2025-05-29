@@ -30,7 +30,7 @@ public class UserController {
 
     // === Get User by ID ===
     @PostMapping("/get")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ADMINISTRATOR', 'OFFICE_ADMINISTRATOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<User> getUserById(@RequestBody IdRequest request) {
         return userService.getUserById(request.getId())
                 .map(ResponseEntity::ok)

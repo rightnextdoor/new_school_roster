@@ -6,6 +6,8 @@ import com.school.roster.school_roster_backend.entity.User;
 import com.school.roster.school_roster_backend.service.ProfileService;
 import com.school.roster.school_roster_backend.service.RosterService;
 import com.school.roster.school_roster_backend.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequestMapping("/api/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
+    private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
 
     private final ProfileService profileService;
     private final UserService userService;
@@ -27,32 +30,40 @@ public class ProfileController {
 
     // === Create Student Profile ===
     @PostMapping("/student/create")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMINISTRATOR', 'ADMIN')")
-    public ResponseEntity<StudentProfile> createStudentProfile(@RequestBody CreateStudentProfileRequest request, Authentication authentication) {
+    @PreAuthorize("hasAnyRole('TEACHER','TEACHER_LEAD','ADMINISTRATOR','ADMIN')")
+    public ResponseEntity<StudentProfile> createStudentProfile(
+            @RequestBody CreateStudentProfileRequest request,
+            Authentication authentication) {
+
+        // 1) Lookup the logged‐in user
         String loggedInEmail = authentication.getName();
         User loggedInUser = userService.getUserByEmail(loggedInEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // If TEACHER, verify they are linked to student via roster
-        if (userService.hasRole(loggedInUser, "TEACHER") && !rosterService.isStudentUnderTeacher(loggedInUser.getId(), request.getUserId())) {
-            throw new RuntimeException("Access denied: Student is not under your roster.");
+        // 2) Enforce roles at runtime too (defense in depth)
+        if (!userService.hasAnyRole(loggedInUser, "TEACHER", "TEACHER_LEAD", "ADMINISTRATOR", "ADMIN")) {
+            throw new RuntimeException("Access denied: insufficient permissions");
         }
 
-        StudentProfile profile = profileService.createStudentProfile(request.getUserId(), request.getStudentProfile());
+        // 3) Delegate to service
+        StudentProfile profile = profileService.createStudentProfile(
+                request.getUserId(),
+                request.getStudentProfile()
+        );
         return ResponseEntity.ok(profile);
     }
 
+
     // === Update Student Profile ===
     @PutMapping("/student/update")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMINISTRATOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER','TEACHER_LEAD','ADMINISTRATOR','ADMIN')")
     public ResponseEntity<StudentProfile> updateStudentProfile(@RequestBody UpdateStudentProfileRequest request, Authentication authentication) {
         String loggedInEmail = authentication.getName();
         User loggedInUser = userService.getUserByEmail(loggedInEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // If TEACHER, verify control over student
-        if (userService.hasRole(loggedInUser, "TEACHER") && !rosterService.isStudentUnderTeacher(loggedInUser.getId(), request.getUpdatedProfile().getLinkedUser().getId())) {
-            throw new RuntimeException("Access denied: Student is not under your roster.");
+        if (!userService.hasAnyRole(loggedInUser, "TEACHER", "TEACHER_LEAD", "ADMINISTRATOR", "ADMIN")) {
+            throw new RuntimeException("Access denied: insufficient permissions");
         }
 
         StudentProfile profile = profileService.updateStudentProfile(request.getProfileId(), request.getUpdatedProfile());
@@ -67,28 +78,45 @@ public class ProfileController {
         return ResponseEntity.ok("Student profile deleted successfully.");
     }
 
+    @GetMapping("/student/list")
+    @PreAuthorize("hasAnyRole('TEACHER','TEACHER_LEAD','ADMINISTRATOR','ADMIN')")
+    public ResponseEntity<List<StudentListItem>> getAllStudents(Authentication authentication) {
+        String loggedInEmail = authentication.getName();
+        User loggedInUser = userService.getUserByEmail(loggedInEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!userService.hasAnyRole(loggedInUser, "TEACHER", "TEACHER_LEAD", "ADMINISTRATOR", "ADMIN")) {
+            throw new RuntimeException("Access denied: insufficient permissions");
+        }
+
+        List<User> students = userService.getUsersByRole("STUDENT");
+        List<StudentListItem> items = profileService.mapToStudentListItems(students);
+
+        return ResponseEntity.ok(items);
+    }
+
     // === Create Non-Student Profile ===
     @PostMapping("/nonstudent/create")
-    @PreAuthorize("isAuthenticated()") // 🔥 only basic check; real validation inside
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<NonStudentProfile> createNonStudentProfile(
             Authentication authentication,
-            @RequestBody CreateNonStudentProfileRequest request) {
-
+            @RequestBody CreateNonStudentProfileRequest request
+    ) {
         User currentUser = userService.getUserByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean isAdmin = userService.hasAnyRole(currentUser, "ADMIN", "ADMINISTRATOR", "OFFICE_ADMINISTRATOR");
+        boolean isAdmin = userService.hasAnyRole(currentUser,
+                "ADMIN", "ADMINISTRATOR", "OFFICE_ADMINISTRATOR");
 
         if (!isAdmin) {
-            // ⚡ Regular user
             if (!currentUser.getId().equals(request.getUserId())) {
                 throw new RuntimeException("You can only create your own non-student profile.");
             }
-
             if (userService.hasRole(currentUser, "STUDENT")) {
                 throw new RuntimeException("Students are not allowed to create non-student profiles.");
             }
         }
+
 
         NonStudentProfile profile = profileService.createNonStudentProfile(
                 request.getUserId(),
@@ -206,5 +234,14 @@ public class ProfileController {
     public static class UpdateNonStudentProfileRequest {
         private Long profileId;
         private NonStudentProfile updatedProfile;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class StudentListItem {
+        private User user;
+        private Long   profileId;
+        private String fullName;
+        private String photoUrl;
     }
 }

@@ -13,6 +13,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api/config': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
       // everything else under /api (auth, roster, etc.) goes to Spring
       '/api': {
         target: 'http://localhost:8080',

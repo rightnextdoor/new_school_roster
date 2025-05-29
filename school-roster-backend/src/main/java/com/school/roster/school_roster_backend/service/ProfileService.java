@@ -1,5 +1,6 @@
 package com.school.roster.school_roster_backend.service;
 
+import com.school.roster.school_roster_backend.controller.ProfileController;
 import com.school.roster.school_roster_backend.entity.NonStudentProfile;
 import com.school.roster.school_roster_backend.entity.StudentProfile;
 import com.school.roster.school_roster_backend.entity.User;
@@ -11,14 +12,13 @@ import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import com.school.roster.school_roster_backend.repository.NonStudentProfileRepository;
 import com.school.roster.school_roster_backend.repository.StudentProfileRepository;
 import com.school.roster.school_roster_backend.repository.UserRepository;
-import com.school.roster.school_roster_backend.security.CryptoUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +75,7 @@ public class ProfileService {
         existingProfile.setPhoneNumbers(updatedData.getPhoneNumbers());
         existingProfile.setGradeLevel(updatedData.getGradeLevel());
         existingProfile.setFirstAttendanceDate(updatedData.getFirstAttendanceDate());
-        existingProfile.setSchoolPicture(updatedData.getSchoolPicture());
+        existingProfile.setProfilePicture(updatedData.getProfilePicture());
         existingProfile.setAddress(updatedData.getAddress());
         existingProfile.setSchoolHistories(updatedData.getSchoolHistories());
         existingProfile.setNutritionalStatus(updatedData.getNutritionalStatus());
@@ -149,6 +149,31 @@ public class ProfileService {
         studentProfileRepository.delete(profile);
     }
 
+    public List<ProfileController.StudentListItem> mapToStudentListItems(List<User> students) {
+        return students.stream()
+                .map(user -> {
+                    // Attempt to find a StudentProfile for this user
+                    StudentProfile profile = studentProfileRepository
+                            .findById(user.getStudentProfile() != null ? user.getStudentProfile().getId() : -1L)
+                            .orElse(null);
+
+                    Long   profileId = (profile != null ? profile.getId() : null);
+                    String fullName  = (profile != null
+                            ? String.join(" ", profile.getFirstName(), profile.getMiddleName(), profile.getLastName())
+                            : null);
+                    String photoUrl  = (profile != null ? profile.getProfilePicture() : null);
+
+                    // Construct and return your domain POJO
+                    return new ProfileController.StudentListItem(
+                            user,
+                            profileId,
+                            fullName,
+                            photoUrl
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
     // === Create Non-Student Profile ===
     public NonStudentProfile createNonStudentProfile(String userId, NonStudentProfile nonStudentProfile) {
         User user = userRepository.findById(userId)
@@ -165,19 +190,6 @@ public class ProfileService {
             nonStudentProfile.getDependentChildren().forEach(this::updateDependentChildAge);
         }
 
-        if (nonStudentProfile.getTaxNumberEncrypted() != null) {
-            nonStudentProfile.setTaxNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getTaxNumberEncrypted()));
-        }
-        if (nonStudentProfile.getGsisNumberEncrypted() != null) {
-            nonStudentProfile.setGsisNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getGsisNumberEncrypted()));
-        }
-        if (nonStudentProfile.getPhilHealthNumberEncrypted() != null) {
-            nonStudentProfile.setPhilHealthNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getPhilHealthNumberEncrypted()));
-        }
-        if (nonStudentProfile.getPagIbigNumberEncrypted() != null) {
-            nonStudentProfile.setPagIbigNumberEncrypted(CryptoUtils.encrypt(nonStudentProfile.getPagIbigNumberEncrypted()));
-        }
-
         assignSalaryGrades(nonStudentProfile.getEmploymentAppointments());
 
         nonStudentProfileRepository.save(nonStudentProfile);
@@ -188,48 +200,52 @@ public class ProfileService {
 
     // === Update Non-Student Profile ===
     public NonStudentProfile updateNonStudentProfile(Long profileId, NonStudentProfile updatedData) {
-        NonStudentProfile existingProfile = nonStudentProfileRepository.findById(profileId)
+        NonStudentProfile existing = nonStudentProfileRepository.findById(profileId)
                 .orElseThrow(() -> new RuntimeException("NonStudentProfile not found with ID: " + profileId));
 
-        existingProfile.setFirstName(updatedData.getFirstName());
-        existingProfile.setMiddleName(updatedData.getMiddleName());
-        existingProfile.setLastName(updatedData.getLastName());
-        existingProfile.setGender(updatedData.getGender());
-        existingProfile.setBirthDate(updatedData.getBirthDate());
-        existingProfile.setBirthPlace(updatedData.getBirthPlace());
-        existingProfile.setCivilStatus(updatedData.getCivilStatus());
-        existingProfile.setPhoneNumbers(updatedData.getPhoneNumbers());
-        existingProfile.setSpouseFirstName(updatedData.getSpouseFirstName());
-        existingProfile.setSpouseMiddleName(updatedData.getSpouseMiddleName());
-        existingProfile.setAddress(updatedData.getAddress());
-        existingProfile.setSpouseLastName(updatedData.getSpouseLastName());
-        existingProfile.setSpouseOccupation(updatedData.getSpouseOccupation());
-        existingProfile.setDependentChildren(updatedData.getDependentChildren());
-        if (updatedData.getTaxNumberEncrypted() != null) {
-            existingProfile.setTaxNumberEncrypted(CryptoUtils.encrypt(updatedData.getTaxNumberEncrypted()));
-        }
-        if (updatedData.getGsisNumberEncrypted() != null) {
-            existingProfile.setGsisNumberEncrypted(CryptoUtils.encrypt(updatedData.getGsisNumberEncrypted()));
-        }
-        if (updatedData.getPhilHealthNumberEncrypted() != null) {
-            existingProfile.setPhilHealthNumberEncrypted(CryptoUtils.encrypt(updatedData.getPhilHealthNumberEncrypted()));
-        }
-        if (updatedData.getPagIbigNumberEncrypted() != null) {
-            existingProfile.setPagIbigNumberEncrypted(CryptoUtils.encrypt(updatedData.getPagIbigNumberEncrypted()));
-        }
-        existingProfile.setEmploymentAppointments(updatedData.getEmploymentAppointments());
-        existingProfile.setEducationalBackground(updatedData.getEducationalBackground());
-        existingProfile.setDepartmentOfEducationEmail(updatedData.getDepartmentOfEducationEmail());
-        existingProfile.setProfilePicture(updatedData.getProfilePicture());
-        existingProfile.setGradeLevel(updatedData.getGradeLevel());
+        // 1) Copy all simple fields
+        existing.setFirstName(updatedData.getFirstName());
+        existing.setMiddleName(updatedData.getMiddleName());
+        existing.setLastName(updatedData.getLastName());
+        existing.setGender(updatedData.getGender());
+        existing.setBirthDate(updatedData.getBirthDate());
+        existing.setBirthPlace(updatedData.getBirthPlace());
+        existing.setCivilStatus(updatedData.getCivilStatus());
+        existing.setPhoneNumbers(updatedData.getPhoneNumbers());
+        existing.setSpouseFirstName(updatedData.getSpouseFirstName());
+        existing.setSpouseMiddleName(updatedData.getSpouseMiddleName());
+        existing.setSpouseLastName(updatedData.getSpouseLastName());
+        existing.setSpouseOccupation(updatedData.getSpouseOccupation());
+        existing.setAddress(updatedData.getAddress());
+        existing.setDependentChildren(updatedData.getDependentChildren());
+        existing.setEmploymentAppointments(updatedData.getEmploymentAppointments());
+        existing.setEducationalBackground(updatedData.getEducationalBackground());
+        existing.setDepartmentOfEducationEmail(updatedData.getDepartmentOfEducationEmail());
+        existing.setProfilePicture(updatedData.getProfilePicture());
+        existing.setGradeLevel(updatedData.getGradeLevel());
 
-        if (existingProfile.getDependentChildren() != null) {
-            existingProfile.getDependentChildren().forEach(this::updateDependentChildAge);
+        if(updatedData.getTaxNumberEncrypted()!= null){
+            existing.setTaxNumberEncrypted(updatedData.getTaxNumberEncrypted());
         }
 
-        assignSalaryGrades(existingProfile.getEmploymentAppointments());
+        if(updatedData.getGsisNumberEncrypted() != null){
+            existing.setGsisNumberEncrypted(updatedData.getGsisNumberEncrypted());
+        }
 
-        return nonStudentProfileRepository.save(existingProfile);
+        if(updatedData.getPhilHealthNumberEncrypted() != null){
+            existing.setPhilHealthNumberEncrypted(updatedData.getPhilHealthNumberEncrypted());
+        }
+        if(updatedData.getPagIbigNumberEncrypted() != null){
+            existing.setPagIbigNumberEncrypted(updatedData.getPagIbigNumberEncrypted());
+        }
+
+        if (existing.getDependentChildren() != null) {
+            existing.getDependentChildren().forEach(this::updateDependentChildAge);
+        }
+
+        assignSalaryGrades(existing.getEmploymentAppointments());
+
+        return nonStudentProfileRepository.save(existing);
     }
 
     private void updateDependentChildAge(com.school.roster.school_roster_backend.entity.embedded.DependentChild child) {
@@ -302,10 +318,11 @@ public class ProfileService {
         NonStudentProfile nonStudentProfile = nonStudentProfileRepository.findAll().stream()
                 .filter(p -> p.getLinkedUser() != null && p.getLinkedUser().getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Profile not found for User ID: " + userId));
+                .orElse(null);
 
         return nonStudentProfile;
     }
+
 
     // === Get All Profiles Combined ===
     public List<Object> getAllProfiles() {

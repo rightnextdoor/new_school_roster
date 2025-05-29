@@ -2,7 +2,8 @@ import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AppLayout() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const userRoles = user?.roles;
 
   const handleLogout = () => {
     logout();
@@ -10,7 +11,6 @@ export default function AppLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Top Navbar with School Name */}
       <nav className="bg-gray-800 text-white shadow px-4 py-2 flex justify-between items-center">
         <div className="flex space-x-4">
           <span className="text-lg font-semibold">
@@ -20,6 +20,13 @@ export default function AppLayout() {
             <Link to="/dashboard" className="hover:text-green-300">
               Dashboard
             </Link>
+            {['TEACHER', 'TEACHER_LEAD', 'ADMINISTRATOR', 'ADMIN'].some(
+              (role) => userRoles?.includes(role)
+            ) && (
+              <Link to="/students" className="hover:text-green-300">
+                Students
+              </Link>
+            )}
             <Link to="/rosters" className="hover:text-green-300">
               Rosters
             </Link>
@@ -37,8 +44,6 @@ export default function AppLayout() {
           </button>
         </div>
       </nav>
-
-      {/* Main Content with Gradient Background */}
       <main className="flex-1 p-4 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500">
         <Outlet />
       </main>

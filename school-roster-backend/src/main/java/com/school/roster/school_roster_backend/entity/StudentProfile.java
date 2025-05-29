@@ -57,8 +57,9 @@ public class StudentProfile {
 
     private String gradeLevel;
     private LocalDate firstAttendanceDate;
-
-    private String schoolPicture;
+    @Lob
+    @Column(name = "profile_picture", columnDefinition = "LONGTEXT")
+    private String profilePicture;
 
     @ElementCollection
     private List<SchoolYearHistory> schoolHistories;
