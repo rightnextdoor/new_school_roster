@@ -7,7 +7,7 @@ import java.util.Base64;
 public class CryptoUtils {
 
     // 16-byte secret key (128 bits)
-    private static final String SECRET_KEY = "1234567890ABCDEF";
+    private static final String SECRET_KEY = "96D4936567232D7C2A96B79E19226";
 
     private static final String ALGORITHM = "AES";
 
