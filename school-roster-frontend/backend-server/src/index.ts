@@ -4,6 +4,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import configRoutes from './routes/configRoutes';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import { getHolidays } from './controllers/holidayController';
 
 dotenv.config();
 const app = express();
@@ -86,6 +87,8 @@ app.get(
     }
   }
 );
+
+app.get('/api/holidays', getHolidays);
 
 // === New Config Routes ===
 app.use('/api/config', configRoutes);

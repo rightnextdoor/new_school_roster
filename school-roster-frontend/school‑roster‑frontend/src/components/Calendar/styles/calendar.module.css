@@ -1,0 +1,61 @@
+/* src/components/Calendar/styles/calendar.module.css */
+
+/* Container for full-height flex layout */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+}
+
+.toolbar {
+  flex: 0 0 auto;
+}
+
+.body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Day view styling */
+.dayView {
+  padding: 8px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Week view styling */
+.weekView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Month view styling */
+.monthView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Year view styling */
+.yearView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Utility: grid cell borders */
+.grid-col {
+  border: 1px solid #e5e7eb; /* light gray */
+}
+
+/* Utility: scrollable content within grid cells */
+.cell-content {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.scrollContainer {
+  overscroll-behavior: contain;
+}

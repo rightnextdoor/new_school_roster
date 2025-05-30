@@ -8,16 +8,44 @@ import type {
   StudentProfile,
   NonStudentProfile,
 } from '../components/profile/types';
+import { CalendarContainer } from '../components/Calendar';
+import { ViewType } from '../types/ViewType';
 
 export default function DashboardPage() {
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Calendar persistence keys (use empty string if user undefined)
+  const uid = user?.id ?? '';
+  const savedDateKey = `calendar-date-${uid}`;
+  const savedViewKey = `calendar-view-${uid}`;
+
+  // Calendar settings persistence (unconditionally declared to satisfy Rules of Hooks)
+  const [savedDate, setSavedDate] = useState<Date>(() => {
+    const stored = localStorage.getItem(savedDateKey);
+    return stored ? new Date(stored) : new Date();
+  });
+  const [savedView, setSavedView] = useState<ViewType>(() => {
+    const stored = localStorage.getItem(savedViewKey) as ViewType;
+    return stored || 'month';
+  });
+
+  useEffect(() => {
+    if (uid) {
+      localStorage.setItem(savedDateKey, savedDate.toISOString());
+    }
+  }, [savedDate, savedDateKey, uid]);
+
+  useEffect(() => {
+    if (uid) {
+      localStorage.setItem(savedViewKey, savedView);
+    }
+  }, [savedView, savedViewKey, uid]);
+
+  // Profile state
   const [profile, setProfile] = useState<
     StudentProfile | NonStudentProfile | null
   >(null);
-
-  // only fetch once we've determined auth state
   useEffect(() => {
     if (!authLoading) {
       getMyProfile()
@@ -34,33 +62,23 @@ export default function DashboardPage() {
     );
   }
 
-  // pick the right photo URL
+  // Profile display values
   const photoUrl = profile?.profilePicture ?? '/placeholder-avatar.png';
-
-  // display name or fallback
   const displayName = profile
     ? [profile.firstName, profile.middleName, profile.lastName]
         .filter(Boolean)
         .join(' ')
     : 'Profile needs to be updated';
-
-  // pull role out of user.roles
-  const displayRole = user?.roles?.length
+  const displayRole = user.roles?.length
     ? user.roles.join(', ').replace(/_/g, ' ')
     : 'User';
 
-  // if still checking auth, you could show a loader here
-  if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">Loading…</div>
-    );
-  }
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       <aside className="w-1/4 bg-gray-100 p-4 space-y-4 shadow-md">
         <div className="bg-white p-4 rounded-md shadow-md">
           <h2 className="text-lg font-semibold mb-2">User Info</h2>
-
           {profile ? (
             <div className="flex flex-col items-center space-y-3">
               <img
@@ -73,7 +91,7 @@ export default function DashboardPage() {
                 <p className="text-gray-600">{displayRole}</p>
                 <button
                   onClick={() =>
-                    navigate(`/profile/${user?.id}`, {
+                    navigate(`/profile/${user.id}`, {
                       state: { from: '/dashboard' },
                     })
                   }
@@ -88,23 +106,19 @@ export default function DashboardPage() {
               <div className="w-36 h-36 rounded-full bg-gray-200 flex items-center justify-center">
                 <p className="text-gray-500">No Profile</p>
               </div>
-              <div className="text-center">
-                <button
-                  onClick={() =>
-                    navigate(`/profile/${user?.id}`, {
-                      state: { from: '/dashboard' },
-                    })
-                  }
-                  className="mt-2 text-sm text-teal-600 hover:underline"
-                >
-                  Create Profile
-                </button>
-              </div>
+              <button
+                onClick={() =>
+                  navigate(`/profile/${user.id}`, {
+                    state: { from: '/dashboard' },
+                  })
+                }
+                className="mt-2 text-sm text-teal-600 hover:underline"
+              >
+                Create Profile
+              </button>
             </div>
           )}
         </div>
-
-        {/* Nav Links */}
         <nav className="space-y-2">
           <a
             href="/dashboard"
@@ -130,19 +144,25 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 p-8 space-y-6">
         {/* Top Row: Calendar & Weather */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 h-[28rem]">
           {/* Calendar Card */}
-          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col">
-            <h2 className="text-lg font-semibold">Calendar</h2>
-            <div className="mt-2 bg-gray-50 p-3 rounded h-full flex items-center justify-center">
-              <p className="text-gray-600">[Calendar Placeholder]</p>
+          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-full flex flex-col">
+            <div className="mt-2 bg-gray-50 p-3 rounded flex-1 flex flex-col overflow-hidden">
+              <CalendarContainer
+                userId={user.id}
+                profileCountry={profile?.address.country ?? ''}
+                initialDate={savedDate}
+                initialView={savedView}
+                onDateChange={setSavedDate}
+                onViewChange={setSavedView}
+              />
             </div>
           </div>
 
           {/* Weather Card */}
-          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-80 flex flex-col">
+          <div className="bg-white p-4 rounded-md shadow-md w-1/2 h-full flex flex-col">
             <WeatherWidget
-              userId={user!.id}
+              userId={user.id}
               defaultCity={profile?.address.cityMunicipality}
             />
           </div>
