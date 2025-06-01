@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.service;
 
 import com.school.roster.school_roster_backend.entity.Grade;
+import com.school.roster.school_roster_backend.entity.HighestPossibleScore;
 import com.school.roster.school_roster_backend.entity.Roster;
 import com.school.roster.school_roster_backend.entity.User;
 import com.school.roster.school_roster_backend.repository.GradeRepository;
@@ -10,18 +11,34 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class RosterService {
 
     private final RosterRepository rosterRepository;
     private final UserRepository userRepository;
     private final GradeRepository gradeRepository;
+    private final GradeService gradeService;
+    private final HighestPossibleScoreService highestPossibleScoreService;
+
+    public RosterService(
+            RosterRepository rosterRepository,
+            UserRepository userRepository,
+            GradeRepository gradeRepository,
+            @Lazy GradeService gradeService,
+            HighestPossibleScoreService highestPossibleScoreService
+    ) {
+        this.rosterRepository = rosterRepository;
+        this.userRepository = userRepository;
+        this.gradeRepository = gradeRepository;
+        this.gradeService = gradeService;
+        this.highestPossibleScoreService = highestPossibleScoreService;
+    }
 
     // === Create Roster ===
     public Roster createRoster(Roster incomingRoster, String teacherId) {
@@ -37,10 +54,41 @@ public class RosterService {
         roster.setGrades(new ArrayList<>());
         roster.setClassGpa(0f);
 
-        return rosterRepository.save(roster);
+        Roster savedRoster = rosterRepository.save(roster);
+
+        HighestPossibleScore hps = highestPossibleScoreService.createHighestPossibleScore(savedRoster);
+        savedRoster.setHighestPossibleScore(hps);
+
+        return rosterRepository.save(savedRoster);
     }
 
+    public void recalculateClassGpa(Long rosterId) {
+        // 1) Fetch the roster (including its grades collection)
+        Roster roster = rosterRepository.findById(rosterId)
+                .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 
+        var grades = roster.getGrades();
+        if (grades == null || grades.isEmpty()) {
+            roster.setClassGpa(0.0f);
+        } else {
+            double sum = 0.0;
+            int count = 0;
+            for (var grade : grades) {
+                Double initial = grade.getInitialGrade();
+                if (initial != null) {
+                    sum += initial;
+                }
+                count++;
+            }
+            double avg = (count > 0) ? (sum / count) : 0.0;
+            // Round to two decimals, then cast to float
+            float roundedAvg = (float) (Math.round(avg * 100.0) / 100.0);
+            roster.setClassGpa(roundedAvg);
+        }
+
+        // 2) Save the roster so the new GPA is persisted
+        rosterRepository.save(roster);
+    }
 
     // === Assign Student to Roster ===
     public Roster addStudentToRoster(Long rosterId, String studentId) {
@@ -54,16 +102,7 @@ public class RosterService {
             roster.getStudents().add(student);
 
             // Create empty Grade object when student is added
-            Grade grade = Grade.builder()
-                    .student(student)
-                    .roster(roster)
-                    .performanceScores(new ArrayList<>())
-                    .quizScores(new ArrayList<>())
-                    .quarterlyExamScores(new ArrayList<>())
-                    .finalGpa(0f)
-                    .build();
-
-            gradeRepository.save(grade);
+            Grade grade = gradeService.createGrade(roster, student);
             roster.getGrades().add(grade);
         }
 

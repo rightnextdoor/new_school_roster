@@ -1,6 +1,8 @@
 package com.school.roster.school_roster_backend.controller;
 
 import com.school.roster.school_roster_backend.entity.*;
+import com.school.roster.school_roster_backend.entity.embedded.ScoreDetails;
+import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import com.school.roster.school_roster_backend.service.RosterService;
 import com.school.roster.school_roster_backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +45,8 @@ class RosterControllerTest {
         teacher.setId("teacherId");
 
         when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(teacher));
-        when(rosterService.createRoster(any(Roster.class), eq("teacherId"))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(rosterService.createRoster(any(Roster.class), eq("teacherId")))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Roster incomingRoster = new Roster();
         incomingRoster.setSubjectName("Math");
@@ -63,10 +66,12 @@ class RosterControllerTest {
         User teacher = new User();
         when(userService.getUserByEmail(anyString())).thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(anyLong(), eq(teacher))).thenReturn(true);
+
         Roster roster = new Roster();
         when(rosterService.updateRoster(anyLong(), any())).thenReturn(roster);
 
-        RosterController.UpdateRosterRequest request = new RosterController.UpdateRosterRequest(1L, new Roster());
+        RosterController.UpdateRosterRequest request =
+                new RosterController.UpdateRosterRequest(1L, new Roster());
         Roster result = controller.updateRoster(request, authentication).getBody();
 
         assertEquals(roster, result);
@@ -94,7 +99,8 @@ class RosterControllerTest {
         Roster roster = new Roster();
         when(rosterService.addStudentToRoster(anyLong(), anyString())).thenReturn(roster);
 
-        RosterController.AddStudentRequest request = new RosterController.AddStudentRequest(1L, "studentId");
+        RosterController.AddStudentRequest request =
+                new RosterController.AddStudentRequest(1L, "studentId");
         Roster result = controller.addStudentToRoster(request, authentication).getBody();
 
         assertEquals(roster, result);
@@ -109,7 +115,8 @@ class RosterControllerTest {
         Roster roster = new Roster();
         when(rosterService.removeStudentFromRoster(anyLong(), anyString())).thenReturn(roster);
 
-        RosterController.AddStudentRequest request = new RosterController.AddStudentRequest(1L, "studentId");
+        RosterController.AddStudentRequest request =
+                new RosterController.AddStudentRequest(1L, "studentId");
         Roster result = controller.removeStudentFromRoster(request, authentication).getBody();
 
         assertEquals(roster, result);
@@ -120,7 +127,8 @@ class RosterControllerTest {
         Roster roster = new Roster();
         when(rosterService.reassignTeacher(anyLong(), anyString())).thenReturn(roster);
 
-        RosterController.ReassignTeacherRequest request = new RosterController.ReassignTeacherRequest(1L, "newTeacherId");
+        RosterController.ReassignTeacherRequest request =
+                new RosterController.ReassignTeacherRequest(1L, "newTeacherId");
         Roster result = controller.reassignTeacher(request).getBody();
 
         assertEquals(roster, result);
@@ -137,7 +145,8 @@ class RosterControllerTest {
         when(rosterService.getRosterById(1L)).thenReturn(roster);
 
         RosterController.IdRequest request = new RosterController.IdRequest(1L);
-        RosterController.RosterResponse result = controller.getRosterById(request, authentication).getBody();
+        RosterController.RosterResponse result =
+                controller.getRosterById(request, authentication).getBody();
 
         assertEquals(1L, result.getRosterId());
     }
@@ -150,9 +159,11 @@ class RosterControllerTest {
 
         Roster roster = new Roster();
         roster.setId(2L);
-        when(rosterService.getRostersByStudentId("studentId")).thenReturn(List.of(roster));
+        when(rosterService.getRostersByStudentId("studentId"))
+                .thenReturn(List.of(roster));
 
-        List<RosterController.RosterResponse> result = controller.getRostersByStudent(authentication).getBody();
+        List<RosterController.RosterResponse> result =
+                controller.getRostersByStudent(authentication).getBody();
 
         assertEquals(1, result.size());
         assertEquals(2L, result.get(0).getRosterId());
@@ -166,9 +177,11 @@ class RosterControllerTest {
 
         Roster roster = new Roster();
         roster.setId(3L);
-        when(rosterService.getRostersByTeacherId("teacherId")).thenReturn(List.of(roster));
+        when(rosterService.getRostersByTeacherId("teacherId"))
+                .thenReturn(List.of(roster));
 
-        List<RosterController.RosterResponse> result = controller.getRostersByTeacher(authentication).getBody();
+        List<RosterController.RosterResponse> result =
+                controller.getRostersByTeacher(authentication).getBody();
 
         assertEquals(1, result.size());
         assertEquals(3L, result.get(0).getRosterId());
@@ -180,7 +193,8 @@ class RosterControllerTest {
         roster.setId(4L);
         when(rosterService.getAllRosters()).thenReturn(List.of(roster));
 
-        List<RosterController.RosterResponse> result = controller.getAllRosters().getBody();
+        List<RosterController.RosterResponse> result =
+                controller.getAllRosters().getBody();
 
         assertEquals(1, result.size());
         assertEquals(4L, result.get(0).getRosterId());
@@ -188,6 +202,7 @@ class RosterControllerTest {
 
     @Test
     void buildRosterResponse_shouldReturnFullyMappedResponse() {
+        // Teacher profile
         NonStudentProfile teacherProfile = new NonStudentProfile();
         teacherProfile.setFirstName("TeacherFirst");
         teacherProfile.setLastName("TeacherLast");
@@ -196,6 +211,7 @@ class RosterControllerTest {
         teacher.setId("teacherId");
         teacher.setNonStudentProfile(teacherProfile);
 
+        // Student profile
         StudentProfile studentProfile = new StudentProfile();
         studentProfile.setFirstName("StudentFirst");
         studentProfile.setLastName("StudentLast");
@@ -204,11 +220,14 @@ class RosterControllerTest {
         student.setId("studentId");
         student.setStudentProfile(studentProfile);
 
+        // Create a Grade. Now we set initialGrade, not finalGpa.
         Grade grade = new Grade();
         grade.setStudent(student);
-        grade.setFinalGpa(95f);
-        grade.setFinalStatus(com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus.WITH_HONORS);
+        grade.setInitialGrade(95.0);                            // ← changed from setFinalGpa(95f)
+        grade.setFinalStatus(StudentGradeStatus.WITH_HONORS);
+        grade.setScoreDetails(new ScoreDetails());              // ensure non-null details
 
+        // Roster with one student and one grade
         Roster roster = new Roster();
         roster.setId(1L);
         roster.setSubjectName("Math");
@@ -219,7 +238,8 @@ class RosterControllerTest {
         roster.setGrades(List.of(grade));
         roster.setClassGpa(92f);
 
-        RosterController.RosterResponse response = controller.buildRosterResponse(roster);
+        RosterController.RosterResponse response =
+                controller.buildRosterResponse(roster);
 
         assertThat(response.getRosterId()).isEqualTo(1L);
         assertThat(response.getSubjectName()).isEqualTo("Math");
@@ -234,7 +254,7 @@ class RosterControllerTest {
         assertThat(studentInfo.getStudentId()).isEqualTo("studentId");
         assertThat(studentInfo.getFirstName()).isEqualTo("StudentFirst");
         assertThat(studentInfo.getLastName()).isEqualTo("StudentLast");
-        assertThat(studentInfo.getFinalGpa()).isEqualTo(95f);
+        assertThat(studentInfo.getFinalGpa()).isEqualTo(95f);       // still named finalGpa in DTO
         assertThat(studentInfo.getFinalStatus()).isEqualTo("WITH_HONORS");
     }
 
@@ -242,13 +262,17 @@ class RosterControllerTest {
     void updateRoster_shouldThrowIfUserCannotEdit() {
         User teacher = new User();
         when(authentication.getName()).thenReturn("teacher@example.com");
-        when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(teacher));
+        when(userService.getUserByEmail("teacher@example.com"))
+                .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
 
-        RosterController.UpdateRosterRequest request = new RosterController.UpdateRosterRequest(1L, new Roster());
+        RosterController.UpdateRosterRequest request =
+                new RosterController.UpdateRosterRequest(1L, new Roster());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.updateRoster(request, authentication));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.updateRoster(request, authentication)
+        );
         assertEquals("Access denied: You are not allowed to update this roster.", ex.getMessage());
     }
 
@@ -256,13 +280,16 @@ class RosterControllerTest {
     void deleteRoster_shouldThrowIfUserCannotEdit() {
         User teacher = new User();
         when(authentication.getName()).thenReturn("teacher@example.com");
-        when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(teacher));
+        when(userService.getUserByEmail("teacher@example.com"))
+                .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
 
         RosterController.IdRequest request = new RosterController.IdRequest(1L);
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.deleteRoster(request, authentication));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.deleteRoster(request, authentication)
+        );
         assertEquals("Access denied: You are not allowed to delete this roster.", ex.getMessage());
     }
 
@@ -270,13 +297,17 @@ class RosterControllerTest {
     void addStudent_shouldThrowIfUserCannotEdit() {
         User teacher = new User();
         when(authentication.getName()).thenReturn("teacher@example.com");
-        when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(teacher));
+        when(userService.getUserByEmail("teacher@example.com"))
+                .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
 
-        RosterController.AddStudentRequest request = new RosterController.AddStudentRequest(1L, "studentId");
+        RosterController.AddStudentRequest request =
+                new RosterController.AddStudentRequest(1L, "studentId");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.addStudentToRoster(request, authentication));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.addStudentToRoster(request, authentication)
+        );
         assertEquals("Access denied: You are not allowed to add students to this roster.", ex.getMessage());
     }
 
@@ -284,13 +315,17 @@ class RosterControllerTest {
     void removeStudent_shouldThrowIfUserCannotEdit() {
         User teacher = new User();
         when(authentication.getName()).thenReturn("teacher@example.com");
-        when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(teacher));
+        when(userService.getUserByEmail("teacher@example.com"))
+                .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
 
-        RosterController.AddStudentRequest request = new RosterController.AddStudentRequest(1L, "studentId");
+        RosterController.AddStudentRequest request =
+                new RosterController.AddStudentRequest(1L, "studentId");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.removeStudentFromRoster(request, authentication));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.removeStudentFromRoster(request, authentication)
+        );
         assertEquals("Access denied: You are not allowed to remove students from this roster.", ex.getMessage());
     }
 
@@ -298,22 +333,25 @@ class RosterControllerTest {
     void getRosterById_shouldThrowIfUserCannotView() {
         User user = new User();
         when(authentication.getName()).thenReturn("teacher@example.com");
-        when(userService.getUserByEmail("teacher@example.com")).thenReturn(Optional.of(user));
+        when(userService.getUserByEmail("teacher@example.com"))
+                .thenReturn(Optional.of(user));
         when(rosterService.canViewRoster(eq(1L), eq(user))).thenReturn(false);
 
         RosterController.IdRequest request = new RosterController.IdRequest(1L);
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.getRosterById(request, authentication));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> controller.getRosterById(request, authentication)
+        );
         assertEquals("Access denied: You are not allowed to view this roster.", ex.getMessage());
     }
 
     @Test
     void updateRosterRequest_shouldReturnUpdatedRoster() {
         Roster roster = new Roster();
-        RosterController.UpdateRosterRequest request = new RosterController.UpdateRosterRequest(1L, roster);
+        RosterController.UpdateRosterRequest request =
+                new RosterController.UpdateRosterRequest(1L, roster);
 
         assertEquals(roster, request.getRosterData());
     }
-
 }

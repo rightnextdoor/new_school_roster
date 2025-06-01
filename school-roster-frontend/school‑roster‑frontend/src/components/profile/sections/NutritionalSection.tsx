@@ -27,7 +27,7 @@ export default function NutritionalSection({
   // Controlled values for height, weight, BMI, and category
   const {
     field: { value: height },
-  } = useController({ name: 'nutritionalStatus.heightInMeters', control });
+  } = useController({ name: 'nutritionalStatus.heightInCentimeters', control });
   const {
     field: { value: weight },
   } = useController({ name: 'nutritionalStatus.weightInKilograms', control });
@@ -43,15 +43,15 @@ export default function NutritionalSection({
       {/* Row 1: Height & Weight */}
       <div className="grid grid-cols-2 gap-4">
         <FormField
-          label="Height (m)"
-          error={errors.nutritionalStatus?.heightInMeters?.message}
+          label="Height (cm)"
+          error={errors.nutritionalStatus?.heightInCentimeters?.message}
           formMode={formMode}
         >
           {formMode ? (
             <input
               type="number"
               step="0.01"
-              {...register('nutritionalStatus.heightInMeters', {
+              {...register('nutritionalStatus.heightInCentimeters', {
                 required: 'Height is required',
                 min: { value: 0.1, message: 'Enter a valid height' },
               })}

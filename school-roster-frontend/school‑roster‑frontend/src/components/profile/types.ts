@@ -32,7 +32,7 @@ export interface DependentChild {
 }
 
 export interface NutritionalStatus {
-  heightInMeters: number;
+  heightInCentimeters: number;
   weightInKilograms: number;
   bmi: number;
   bmiCategory: BMICategory;

@@ -112,12 +112,13 @@ public class ProfileService {
     }
 
     private void updateNutritionalStatus(StudentProfile profile) {
-        if (profile.getNutritionalStatus().getHeightInMeters() != null
+        if (profile.getNutritionalStatus().getHeightInCentimeters() != null
                 && profile.getNutritionalStatus().getWeightInKilograms() != null) {
 
-            Float height = profile.getNutritionalStatus().getHeightInMeters();
+            Float height = profile.getNutritionalStatus().getHeightInCentimeters();
             Float weight = profile.getNutritionalStatus().getWeightInKilograms();
-            Float bmi = weight / (height * height);
+            Float heightM = height / 100f;
+            Float bmi = weight / (heightM * heightM);
             profile.getNutritionalStatus().setBmi(bmi);
 
             if (bmi < 16) {

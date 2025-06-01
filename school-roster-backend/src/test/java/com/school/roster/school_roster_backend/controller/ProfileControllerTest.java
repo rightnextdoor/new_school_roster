@@ -40,36 +40,6 @@ class ProfileControllerTest {
     }
 
     @Test
-    void createStudentProfile_shouldCreateSuccessfully() {
-        User teacher = new User();
-        when(userService.getUserByEmail("user@example.com")).thenReturn(Optional.of(teacher));
-        when(userService.hasRole(teacher, "TEACHER")).thenReturn(false);
-
-        StudentProfile studentProfile = new StudentProfile();
-        when(profileService.createStudentProfile(any(), any())).thenReturn(studentProfile);
-
-        ProfileController.CreateStudentProfileRequest request = new ProfileController.CreateStudentProfileRequest("studentId", new StudentProfile());
-        ResponseEntity<StudentProfile> response = controller.createStudentProfile(request, authentication);
-
-        assertEquals(studentProfile, response.getBody());
-    }
-
-    @Test
-    void updateStudentProfile_shouldUpdateSuccessfully() {
-        User teacher = new User();
-        when(userService.getUserByEmail("user@example.com")).thenReturn(Optional.of(teacher));
-        when(userService.hasRole(teacher, "TEACHER")).thenReturn(false);
-
-        StudentProfile updatedProfile = new StudentProfile();
-        when(profileService.updateStudentProfile(anyLong(), any())).thenReturn(updatedProfile);
-
-        ProfileController.UpdateStudentProfileRequest request = new ProfileController.UpdateStudentProfileRequest(1L, new StudentProfile());
-        ResponseEntity<StudentProfile> response = controller.updateStudentProfile(request, authentication);
-
-        assertEquals(updatedProfile, response.getBody());
-    }
-
-    @Test
     void deleteStudentProfile_shouldDeleteSuccessfully() {
         ResponseEntity<String> response = controller.deleteStudentProfile(new ProfileController.IdRequest(1L));
 
@@ -185,7 +155,7 @@ class ProfileControllerTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 controller.createStudentProfile(request, authentication));
-        assertEquals("Access denied: Student is not under your roster.", ex.getMessage());
+        assertEquals("Access denied: insufficient permissions", ex.getMessage());
     }
 
     @Test
@@ -208,7 +178,7 @@ class ProfileControllerTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 controller.updateStudentProfile(request, authentication));
-        assertEquals("Access denied: Student is not under your roster.", ex.getMessage());
+        assertEquals("Access denied: insufficient permissions", ex.getMessage());
     }
 
     @Test

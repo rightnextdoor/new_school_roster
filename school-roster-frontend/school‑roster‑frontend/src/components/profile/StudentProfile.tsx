@@ -123,7 +123,7 @@ const StudentProfile: React.FC<Props> = ({ data, user }) => {
       {/* 4. Nutritional */}
       <SectionCard id="nutritional" title="Nutritional">
         <p>
-          <strong>Height:</strong> {nutritional.heightInMeters || '—'} m
+          <strong>Height:</strong> {nutritional.heightInCentimeters || '—'} cm
         </p>
         <p>
           <strong>Weight:</strong> {nutritional.weightInKilograms || '—'} kg

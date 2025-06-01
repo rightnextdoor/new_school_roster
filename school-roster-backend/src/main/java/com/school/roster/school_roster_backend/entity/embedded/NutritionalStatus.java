@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @Embeddable
 public class NutritionalStatus {
-    private Float heightInMeters;
+    private Float heightInCentimeters;
     private Float weightInKilograms;
     private Float bmi;
     private BMICategory bmiCategory;

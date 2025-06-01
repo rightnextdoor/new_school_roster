@@ -167,7 +167,7 @@ public class RosterController {
                             student.getId(),
                             student.getStudentProfile() != null ? student.getStudentProfile().getFirstName() : null,
                             student.getStudentProfile() != null ? student.getStudentProfile().getLastName() : null,
-                            grade != null ? grade.getFinalGpa() : null,
+                            grade != null ? grade.getInitialGrade() : null,
                             grade != null && grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null // 🛠 add this
                     );
                 }).collect(Collectors.toList()),
@@ -215,7 +215,7 @@ public class RosterController {
         private String studentId;
         private String firstName;
         private String lastName;
-        private Float finalGpa;
+        private Double finalGpa;
         private String finalStatus;
     }
 

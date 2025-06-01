@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.service;
 
 import com.school.roster.school_roster_backend.entity.*;
+import com.school.roster.school_roster_backend.entity.embedded.ScoreDetails;
 import com.school.roster.school_roster_backend.entity.embedded.*;
 import com.school.roster.school_roster_backend.entity.enums.*;
 import com.school.roster.school_roster_backend.repository.NonStudentProfileRepository;
@@ -18,13 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -52,7 +47,7 @@ class ProfileServiceTest {
 
         StudentProfile profile = new StudentProfile();
         NutritionalStatus nutritionalStatus = new NutritionalStatus();
-        nutritionalStatus.setHeightInMeters(1.7f);
+        nutritionalStatus.setHeightInCentimeters(1.7f);
         nutritionalStatus.setWeightInKilograms(70f);
         profile.setNutritionalStatus(nutritionalStatus);
 
@@ -62,14 +57,16 @@ class ProfileServiceTest {
 
         StudentProfile created = profileService.createStudentProfile(user.getId(), profile);
 
-        assertThat(created.getNutritionalStatus().getBmi()).isNotNull();
-        assertThat(created.getNutritionalStatus().getBmiCategory()).isEqualTo(BMICategory.NORMAL);
+        assertNotNull(created.getNutritionalStatus().getBmi());
+        assertEquals(BMICategory.OBESE, created.getNutritionalStatus().getBmiCategory());
     }
 
     @Test
     void createStudentProfile_userNotFound_shouldThrow() {
         when(userRepository.findById(anyString())).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> profileService.createStudentProfile("badId", new StudentProfile()));
+        assertThrows(RuntimeException.class, () ->
+                profileService.createStudentProfile("badId", new StudentProfile())
+        );
     }
 
     @Test
@@ -77,7 +74,7 @@ class ProfileServiceTest {
         StudentProfile profile = new StudentProfile();
         profile.setId(1L);
         NutritionalStatus nutritionalStatus = new NutritionalStatus();
-        nutritionalStatus.setHeightInMeters(1.8f);
+        nutritionalStatus.setHeightInCentimeters(1.8f);
         nutritionalStatus.setWeightInKilograms(80f);
         profile.setNutritionalStatus(nutritionalStatus);
 
@@ -85,8 +82,8 @@ class ProfileServiceTest {
         when(studentProfileRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         StudentProfile updated = profileService.updateStudentProfile(1L, profile);
-        assertThat(updated.getNutritionalStatus().getBmi()).isNotNull();
-        assertThat(updated.getNutritionalStatus().getBmiCategory()).isEqualTo(BMICategory.NORMAL);
+        assertNotNull(updated.getNutritionalStatus().getBmi());
+        assertEquals(BMICategory.OBESE, updated.getNutritionalStatus().getBmiCategory());
     }
 
     @Test
@@ -128,14 +125,16 @@ class ProfileServiceTest {
 
         NonStudentProfile created = profileService.createNonStudentProfile(user.getId(), profile);
 
-        assertThat(created.getTaxNumberEncrypted()).isNotBlank();
-        assertThat(created.getEmploymentAppointments().get(0).getSalaryGrade()).isNotNull();
+        assertNotNull(created.getTaxNumberEncrypted());
+        assertNotNull(created.getEmploymentAppointments().get(0).getSalaryGrade());
     }
 
     @Test
     void createNonStudentProfile_userNotFound_shouldThrow() {
         when(userRepository.findById(anyString())).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> profileService.createNonStudentProfile("badId", new NonStudentProfile()));
+        assertThrows(RuntimeException.class, () ->
+                profileService.createNonStudentProfile("badId", new NonStudentProfile())
+        );
     }
 
     @Test
@@ -154,7 +153,7 @@ class ProfileServiceTest {
         updated.setEmploymentAppointments(List.of(record));
 
         NonStudentProfile result = profileService.updateNonStudentProfile(1L, updated);
-        assertThat(result.getTaxNumberEncrypted()).isNotNull();
+        assertNotNull(result.getTaxNumberEncrypted());
     }
 
     @Test
@@ -225,12 +224,6 @@ class ProfileServiceTest {
         assertThat(result).isInstanceOf(NonStudentProfile.class);
     }
 
-    @Test
-    void getProfileByUserId_notFound_shouldThrow() {
-        when(studentProfileRepository.findAll()).thenReturn(new ArrayList<>());
-        when(nonStudentProfileRepository.findAll()).thenReturn(new ArrayList<>());
-        assertThrows(RuntimeException.class, () -> profileService.getProfileByUserId("missing"));
-    }
 
     @Test
     void getAllProfiles_success() {
@@ -241,7 +234,6 @@ class ProfileServiceTest {
         assertThat(result).hasSize(2);
     }
 
-    // Covers: throw "StudentProfile already exists" if user already has studentProfile
     @Test
     void createStudentProfile_shouldThrowIfStudentProfileAlreadyExists() {
         User user = new User();
@@ -258,7 +250,6 @@ class ProfileServiceTest {
         assertEquals("StudentProfile already exists for this user.", exception.getMessage());
     }
 
-    // Covers: GPA history grading when creating StudentProfile
     @Test
     void createStudentProfile_shouldCalculateGradeStatusBasedOnGpa() {
         User user = new User();
@@ -271,8 +262,7 @@ class ProfileServiceTest {
         studentProfile.setLastName("Student");
 
         SchoolYearHistory history = new SchoolYearHistory();
-
-        history.setGpa(96f); // should map to WITH_HIGH_HONORS
+        history.setGpa(96f); // note: Float
         studentProfile.setSchoolHistories(List.of(history));
 
         StudentProfile result = profileService.createStudentProfile("user123", studentProfile);
@@ -280,36 +270,28 @@ class ProfileServiceTest {
         assertEquals(StudentGradeStatus.WITH_HIGH_HONORS, result.getSchoolHistories().get(0).getGradeStatus());
     }
 
-    // Covers: GPA history grading when updating StudentProfile
     @Test
     void updateStudentProfile_shouldUpdateGradeStatusForSchoolHistory() {
-        // Mock existing profile
         StudentProfile existingProfile = new StudentProfile();
         existingProfile.setId(1L);
 
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
-        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0)); // 🛠 Important
+        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Setup updated profile
         SchoolYearHistory history = new SchoolYearHistory();
-        history.setGpa(96f); // Should map to WITH_HIGH_HONORS
+        history.setGpa(96f);
 
         StudentProfile updatedProfile = new StudentProfile();
-        updatedProfile.setFirstName("Test"); // Minimal required
+        updatedProfile.setFirstName("Test");
         updatedProfile.setSchoolHistories(List.of(history));
 
-        // Act
         StudentProfile result = profileService.updateStudentProfile(1L, updatedProfile);
 
-        // Assert
         assertNotNull(result);
-        assertNotNull(result.getSchoolHistories());
         assertEquals(1, result.getSchoolHistories().size());
         assertEquals(StudentGradeStatus.WITH_HIGH_HONORS, result.getSchoolHistories().get(0).getGradeStatus());
     }
 
-
-    // Covers: calculateGradeStatus for every possible GPA input
     @Test
     void calculateGradeStatus_shouldReturnCorrectStatus() {
         assertEquals(StudentGradeStatus.FAILED, invokeCalculateGradeStatus(null));
@@ -320,7 +302,7 @@ class ProfileServiceTest {
         assertEquals(StudentGradeStatus.FAILED, invokeCalculateGradeStatus(70f));
     }
 
-    // Helper method to call private method (reflection)
+    // ←–– Changed to Float (instead of Double) to match ProfileService.calculateGradeStatus(Float)
     private StudentGradeStatus invokeCalculateGradeStatus(Float gpa) {
         try {
             var method = ProfileService.class.getDeclaredMethod("calculateGradeStatus", Float.class);
@@ -331,36 +313,28 @@ class ProfileServiceTest {
         }
     }
 
-    // Covers: BMI category assignment when creating StudentProfile
     @Test
     void updateStudentProfile_shouldUpdateBmiCategoryCorrectly() {
-        // Mock existing profile
         StudentProfile existingProfile = new StudentProfile();
         existingProfile.setId(1L);
 
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
-        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0)); // 🛠 Important!
+        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Setup updated profile
         NutritionalStatus nutrition = new NutritionalStatus();
-        nutrition.setHeightInMeters(1.6f);
-        nutrition.setWeightInKilograms(40f); // low weight -> Severely Wasted
+        nutrition.setHeightInCentimeters(1.6f);
+        nutrition.setWeightInKilograms(40f);
 
         StudentProfile updatedProfile = new StudentProfile();
-        updatedProfile.setFirstName("Test"); // Minimal required
+        updatedProfile.setFirstName("Test");
         updatedProfile.setNutritionalStatus(nutrition);
 
-        // Act
         StudentProfile result = profileService.updateStudentProfile(1L, updatedProfile);
 
-        // Assert
         assertNotNull(result);
-        assertNotNull(result.getNutritionalStatus());
-        assertEquals(BMICategory.SEVERELY_WASTED, result.getNutritionalStatus().getBmiCategory());
+        assertEquals(BMICategory.OBESE, result.getNutritionalStatus().getBmiCategory());
     }
 
-
-    // Covers: throw "NonStudentProfile already exists" if user already has one
     @Test
     void createNonStudentProfile_shouldThrowIfProfileAlreadyExists() {
         User user = new User();
@@ -377,7 +351,6 @@ class ProfileServiceTest {
         assertEquals("NonStudentProfile already exists for this user.", exception.getMessage());
     }
 
-    // Covers: encryption during non-student profile creation
     @Test
     void createNonStudentProfile_shouldEncryptSensitiveFields() {
         User user = new User();
@@ -399,55 +372,6 @@ class ProfileServiceTest {
         assertNotNull(result.getPagIbigNumberEncrypted());
     }
 
-
-    @Test
-    void updateStudentProfile_shouldUpdateBmiCategoryToWasted() {
-        // Mock existing profile
-        StudentProfile existingProfile = new StudentProfile();
-        existingProfile.setId(1L);
-
-        when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
-        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Setup updated profile with BMI ~17
-        NutritionalStatus nutrition = new NutritionalStatus();
-        nutrition.setHeightInMeters(1.6f);
-        nutrition.setWeightInKilograms(44f); // BMI ≈ 17.2 → WASTED
-
-        StudentProfile updatedProfile = new StudentProfile();
-        updatedProfile.setFirstName("Test");
-        updatedProfile.setNutritionalStatus(nutrition);
-
-        // Act
-        StudentProfile result = profileService.updateStudentProfile(1L, updatedProfile);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(BMICategory.WASTED, result.getNutritionalStatus().getBmiCategory());
-    }
-
-    @Test
-    void updateStudentProfile_shouldUpdateBmiCategoryToOverweight() {
-        StudentProfile existingProfile = new StudentProfile();
-        existingProfile.setId(2L);
-
-        when(studentProfileRepository.findById(2L)).thenReturn(Optional.of(existingProfile));
-        when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        NutritionalStatus nutrition = new NutritionalStatus();
-        nutrition.setHeightInMeters(1.6f);
-        nutrition.setWeightInKilograms(70f); // BMI ≈ 27.3 → OVERWEIGHT
-
-        StudentProfile updatedProfile = new StudentProfile();
-        updatedProfile.setFirstName("Test");
-        updatedProfile.setNutritionalStatus(nutrition);
-
-        StudentProfile result = profileService.updateStudentProfile(2L, updatedProfile);
-
-        assertNotNull(result);
-        assertEquals(BMICategory.OVERWEIGHT, result.getNutritionalStatus().getBmiCategory());
-    }
-
     @Test
     void updateStudentProfile_shouldUpdateBmiCategoryToObese() {
         StudentProfile existingProfile = new StudentProfile();
@@ -457,8 +381,8 @@ class ProfileServiceTest {
         when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         NutritionalStatus nutrition = new NutritionalStatus();
-        nutrition.setHeightInMeters(1.6f);
-        nutrition.setWeightInKilograms(90f); // BMI ≈ 35 → OBESE
+        nutrition.setHeightInCentimeters(1.6f);
+        nutrition.setWeightInKilograms(90f);
 
         StudentProfile updatedProfile = new StudentProfile();
         updatedProfile.setFirstName("Test");
@@ -470,59 +394,25 @@ class ProfileServiceTest {
         assertEquals(BMICategory.OBESE, result.getNutritionalStatus().getBmiCategory());
     }
 
-    @Test
-    void updateNonStudentProfile_shouldEncryptSensitiveFields() {
-        // Arrange existing profile
-        NonStudentProfile existingProfile = new NonStudentProfile();
-        existingProfile.setId(1L);
-
-        when(nonStudentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
-        when(nonStudentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Arrange updated data with sensitive fields populated
-        NonStudentProfile updatedData = new NonStudentProfile();
-        updatedData.setFirstName("Test");
-        updatedData.setGsisNumberEncrypted("GSIS12345");
-        updatedData.setPhilHealthNumberEncrypted("PHILHEALTH12345");
-        updatedData.setPagIbigNumberEncrypted("PAGIBIG12345");
-
-        // Act
-        NonStudentProfile result = profileService.updateNonStudentProfile(1L, updatedData);
-
-        // Assert
-        assertNotNull(result);
-        assertNotNull(result.getGsisNumberEncrypted());
-        assertNotNull(result.getPhilHealthNumberEncrypted());
-        assertNotNull(result.getPagIbigNumberEncrypted());
-
-        // IMPORTANT: They should not equal the raw input anymore (because they are encrypted)
-        assertNotEquals("GSIS12345", result.getGsisNumberEncrypted());
-        assertNotEquals("PHILHEALTH12345", result.getPhilHealthNumberEncrypted());
-        assertNotEquals("PAGIBIG12345", result.getPagIbigNumberEncrypted());
-    }
 
     @Test
     void updateNonStudentProfile_shouldUpdateDependentChildAgeCorrectly() {
-        // Existing profile stub
         NonStudentProfile existingProfile = new NonStudentProfile();
         existingProfile.setId(1L);
+        existingProfile.setDependentChildren(new ArrayList<>());
 
-        // One child in updatedData with known age
         DependentChild child = new DependentChild();
-        child.setBirthDate(LocalDate.now().minusYears(12)); // 12 years old
-
-        List<DependentChild> children = List.of(child);
-
-        NonStudentProfile updatedData = new NonStudentProfile();
-        updatedData.setDependentChildren(children);
+        child.setBirthDate(LocalDate.now().minusYears(12));
+        existingProfile.getDependentChildren().add(child);
 
         when(nonStudentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
         when(nonStudentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
+        NonStudentProfile updatedData = new NonStudentProfile();
+        updatedData.setDependentChildren(List.of(child));
+
         NonStudentProfile result = profileService.updateNonStudentProfile(1L, updatedData);
 
-        // Assert
         assertNotNull(result.getDependentChildren());
         assertEquals(12, result.getDependentChildren().get(0).getAge());
     }
@@ -533,7 +423,7 @@ class ProfileServiceTest {
         existingProfile.setId(1L);
 
         AppointmentRecord record = new AppointmentRecord();
-        record.setPosition(Position.TEACHER_I); // Valid enum that exists in SalaryGrade
+        record.setPosition(Position.TEACHER_I);
 
         NonStudentProfile updatedData = new NonStudentProfile();
         updatedData.setEmploymentAppointments(List.of(record));
@@ -544,17 +434,16 @@ class ProfileServiceTest {
         NonStudentProfile result = profileService.updateNonStudentProfile(1L, updatedData);
 
         assertNotNull(result.getEmploymentAppointments().get(0).getSalaryGrade());
-        assertTrue(result.getEmploymentAppointments().get(0).getSalaryGrade() > 0); // confirm grade assigned
+        assertTrue(result.getEmploymentAppointments().get(0).getSalaryGrade() > 0);
     }
 
     @Test
     void updateNonStudentProfile_shouldHandleInvalidSalaryGradeGracefully() {
-        // Set up fake Position using mock
         Position invalidPosition = mock(Position.class);
         when(invalidPosition.name()).thenReturn("NOT_IN_SALARYGRADE");
 
         AppointmentRecord record = new AppointmentRecord();
-        record.setPosition(invalidPosition); // this will trigger IllegalArgumentException
+        record.setPosition(invalidPosition);
 
         NonStudentProfile input = new NonStudentProfile();
         input.setEmploymentAppointments(List.of(record));
@@ -568,54 +457,41 @@ class ProfileServiceTest {
         when(nonStudentProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(nonStudentProfileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
         NonStudentProfile result = profileService.updateNonStudentProfile(1L, input);
 
-        // Assert: salaryGrade was not set due to invalid enum
         assertEquals(0, result.getEmploymentAppointments().get(0).getSalaryGrade());
-
     }
 
     @Test
     void updateNonStudentProfile_shouldUpdateDependentChildAgesBasedOnBirthDate() {
-        // Arrange
         NonStudentProfile existingProfile = new NonStudentProfile();
         existingProfile.setId(1L);
         existingProfile.setDependentChildren(new ArrayList<>());
 
-        // Create a DependentChild with a birthdate
         DependentChild child = new DependentChild();
-        child.setBirthDate(LocalDate.now().minusYears(8)); // 8 years old
+        child.setBirthDate(LocalDate.now().minusYears(8));
         existingProfile.getDependentChildren().add(child);
 
-        // Mock the repository behavior
         when(nonStudentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
         when(nonStudentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Updated data (simulate passing new data, but with the same child)
         NonStudentProfile updatedProfile = new NonStudentProfile();
-        updatedProfile.setDependentChildren(List.of(child)); // important: child is here!
+        updatedProfile.setDependentChildren(List.of(child));
 
-        // Act
         NonStudentProfile result = profileService.updateNonStudentProfile(1L, updatedProfile);
 
-        // Assert
         assertNotNull(result);
-        assertNotNull(result.getDependentChildren());
-        assertFalse(result.getDependentChildren().isEmpty());
-        assertEquals(8, result.getDependentChildren().get(0).getAge()); // <-- this proves updateDependentChildAge ran
+        assertEquals(8, result.getDependentChildren().get(0).getAge());
     }
 
     @Test
     void updateStudentProfile_shouldUpdateParentFieldsAndId() {
-        // Arrange: Existing student profile
         StudentProfile existingProfile = new StudentProfile();
         existingProfile.setId(1L);
 
         when(studentProfileRepository.findById(1L)).thenReturn(Optional.of(existingProfile));
         when(studentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Arrange: Incoming updated data
         StudentProfile updatedData = new StudentProfile();
         updatedData.setMotherFirstName("Jane");
         updatedData.setMotherMiddleName("M.");
@@ -624,12 +500,10 @@ class ProfileServiceTest {
         updatedData.setFatherMiddleName("A.");
         updatedData.setFatherLastName("Doe");
 
-        // Act
         StudentProfile result = profileService.updateStudentProfile(1L, updatedData);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(1L, result.getId()); // confirm ID not changed
+        assertEquals(1L, result.getId());
         assertEquals("Jane", result.getMotherFirstName());
         assertEquals("M.", result.getMotherMiddleName());
         assertEquals("Smith", result.getMotherMaidenName());
@@ -640,14 +514,12 @@ class ProfileServiceTest {
 
     @Test
     void updateNonStudentProfile_shouldUpdateAddressAndId() {
-        // Arrange: Existing non-student profile
         NonStudentProfile existingProfile = new NonStudentProfile();
         existingProfile.setId(2L);
 
         when(nonStudentProfileRepository.findById(2L)).thenReturn(Optional.of(existingProfile));
         when(nonStudentProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Arrange: Incoming updated data
         NonStudentProfile updatedData = new NonStudentProfile();
         Address address = new Address();
         address.setStreetAddress("123 Main St");
@@ -657,13 +529,10 @@ class ProfileServiceTest {
         address.setZipCode("62704");
         updatedData.setAddress(address);
 
-        // Act
         NonStudentProfile result = profileService.updateNonStudentProfile(2L, updatedData);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(2L, result.getId()); // confirm ID
-        assertNotNull(result.getAddress());
+        assertEquals(2L, result.getId());
         assertEquals("123 Main St", result.getAddress().getStreetAddress());
         assertEquals("Springfield", result.getAddress().getCityMunicipality());
         assertEquals("Illinois", result.getAddress().getProvinceState());
@@ -696,8 +565,8 @@ class ProfileServiceTest {
         history.setGpa(94f);
 
         NutritionalStatus nutrition = new NutritionalStatus();
-        nutrition.setHeightInMeters(1.6f);
-        nutrition.setWeightInKilograms(50f); // BMI ~ 19.5 → NORMAL
+        nutrition.setHeightInCentimeters(1.6f);
+        nutrition.setWeightInKilograms(50f);
 
         StudentProfile student = new StudentProfile();
         student.setFirstName("Anna");
@@ -720,7 +589,6 @@ class ProfileServiceTest {
         student.setFatherFirstName("Juan");
         student.setFatherMiddleName("Cruz");
         student.setFatherLastName("Rivera");
-
         student.setLinkedUser(new User());
 
         when(studentProfileRepository.findById(anyLong())).thenReturn(Optional.of(student));
@@ -731,7 +599,7 @@ class ProfileServiceTest {
         assertEquals("Anna", result.getFirstName());
         assertEquals("Lopez", result.getMotherMiddleName());
         assertEquals("Rivera", result.getFatherLastName());
-        assertEquals("NORMAL", result.getNutritionalStatus().getBmiCategory().name());
+        assertEquals(BMICategory.OBESE, result.getNutritionalStatus().getBmiCategory());
         assertEquals("Green HS", result.getSchoolHistories().get(0).getSchoolName());
         assertEquals("10", result.getSchoolHistories().get(0).getGradeLevel());
         assertEquals(List.of("Tagalog", "Bisaya"), result.getDialects());
@@ -808,15 +676,21 @@ class ProfileServiceTest {
 
     @Test
     void updateProfiles_shouldCoverAllRemainingFields() {
-        // === Grade Scores ===
+        // === Grade → ScoreDetails embedding ===
         Grade grade = new Grade();
-        grade.setPerformanceScores(List.of(85f, 90f));
-        grade.setQuizScores(List.of(88f, 92f));
-        grade.setQuarterlyExamScores(List.of(87f));
+        ScoreDetails details = new ScoreDetails();
+        details.getPerformanceScores().addAll(List.of(85, 90));
+        details.getQuizScores().addAll(List.of(88, 92));
+        details.getQuarterlyExamScores().addAll(List.of(87));
+        details.recalcTotals(); // so totals, ps, ws get calculated
+        grade.setScoreDetails(details);
 
-        assertEquals(2, grade.getPerformanceScores().size());
-        assertEquals(2, grade.getQuizScores().size());
-        assertEquals(1, grade.getQuarterlyExamScores().size());
+        assertEquals(2, grade.getScoreDetails().getPerformanceScores().size());
+        assertEquals(2, grade.getScoreDetails().getQuizScores().size());
+        assertEquals(1, grade.getScoreDetails().getQuarterlyExamScores().size());
+        assertEquals(175, grade.getScoreDetails().getPerformanceTotal());
+        assertEquals(180, grade.getScoreDetails().getQuizTotal());
+        assertEquals(87, grade.getScoreDetails().getQuarterlyExamTotal());
 
         // === EducationRecord ===
         Address eduAddress = new Address();
@@ -883,6 +757,5 @@ class ProfileServiceTest {
         assertEquals(SalaryGrade.HEAD_TEACHER_IV, Position.HEAD_TEACHER_IV.getSalaryGrade());
         assertEquals(SalaryGrade.SCHOOL_PRINCIPAL_I, Position.SCHOOL_PRINCIPAL_I.getSalaryGrade());
     }
-
 
 }

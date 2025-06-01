@@ -3,15 +3,17 @@
 
 import { CalendarEvent } from '../types/CalendarEvent';
 
-// In-memory cache: key = `${countryCode}-${year}`
+// In-memory cache
 const holidayCache: Record<string, CalendarEvent[]> = {};
 
+// Helper: parse a YMD string as **local** midnight
+function parseLocalDate(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 /**
- * Fetches holidays for a given country and year.
- * Caches results in-memory and optionally in localStorage.
- * Logs to console when an API call is made.
- * @param countryCode ISO-2 country code
- * @param year four-digit year
+ * Fetches holidays for a country/year, with caching.
  */
 export async function fetchHolidays(
   countryCode: string,
@@ -19,73 +21,75 @@ export async function fetchHolidays(
 ): Promise<CalendarEvent[]> {
   const cacheKey = `${countryCode}-${year}`;
 
-  // Return from in-memory cache
+  // 1) In-memory
   if (holidayCache[cacheKey]) {
-    console.log(`[HolidayService] Returning cached holidays for ${cacheKey}`);
+    console.log(`[HolidayService] cached in-memory ${cacheKey}`);
     return holidayCache[cacheKey];
   }
 
-  // Attempt to read from localStorage
+  // 2) localStorage
   try {
-    const stored = localStorage.getItem(`holidays-${cacheKey}`);
-    if (stored) {
-      console.log(
-        `[HolidayService] Returning localStorage holidays for ${cacheKey}`
-      );
-      const parsed: CalendarEvent[] = JSON.parse(stored).map((item: any) => ({
+    const raw = localStorage.getItem(`holidays-${cacheKey}`);
+    if (raw) {
+      console.log(`[HolidayService] cached in localStorage ${cacheKey}`);
+      const arr: any[] = JSON.parse(raw);
+      const parsed: CalendarEvent[] = arr.map((item) => ({
         ...item,
-        start: new Date(item.start),
-        end: item.end ? new Date(item.end) : undefined,
+        // item.start was stored as ISO string → slice to YYYY-MM-DD
+        start: parseLocalDate(item.start.slice(0, 10)),
+        end: item.end ? parseLocalDate(item.end.slice(0, 10)) : undefined,
       }));
       holidayCache[cacheKey] = parsed;
       return parsed;
     }
-  } catch (err) {
-    console.warn(`[HolidayService] localStorage error for ${cacheKey}:`, err);
+  } catch (e) {
+    console.warn(`[HolidayService] localStorage read failed ${cacheKey}`, e);
   }
 
-  // Fetch from backend proxy
-  console.log(`[HolidayService] Fetching holidays from API for ${cacheKey}`);
-  const response = await fetch(
+  // 3) Fetch from API
+  console.log(`[HolidayService] fetching API ${cacheKey}`);
+  const res = await fetch(
     `/api/holidays?country=${encodeURIComponent(countryCode)}&year=${year}`
   );
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(
-      `[HolidayService] API error for ${cacheKey}:`,
-      response.status,
-      errorText
-    );
-    throw new Error(`Failed to fetch holidays: ${response.statusText}`);
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error(`[HolidayService] API error ${cacheKey}`, res.status, txt);
+    throw new Error(res.statusText);
   }
-  const items: any[] = await response.json();
+  const items: any[] = await res.json();
 
-  // Normalize into CalendarEvent[]
-  const holidays: CalendarEvent[] = items.map((event) => ({
-    id: event.id,
-    summary: event.summary,
-    start: event.start.date
-      ? new Date(event.start.date)
-      : new Date(event.start.dateTime),
-    end: event.end?.date
-      ? new Date(event.end.date)
-      : event.end?.dateTime
-      ? new Date(event.end.dateTime)
-      : undefined,
-    isHoliday: true,
-  }));
+  // Normalize all event dates into local Date
+  const holidays: CalendarEvent[] = items.map((ev) => {
+    // prefer .date (all-day) or fallback to dateTime
+    const s = ev.start.date ?? ev.start.dateTime.slice(0, 10);
+    const e = ev.end?.date ?? ev.end?.dateTime?.slice(0, 10);
+    return {
+      id: ev.id,
+      summary: ev.summary,
+      start: parseLocalDate(s),
+      end: e ? parseLocalDate(e) : undefined,
+      isHoliday: true,
+    };
+  });
 
-  // Cache in memory
+  // Cache in-memory
   holidayCache[cacheKey] = holidays;
 
-  // Store in localStorage until year-end
+  // Store raw ISO strings in localStorage (so we can re-hydrate via the same slice+parse)
   try {
-    localStorage.setItem(`holidays-${cacheKey}`, JSON.stringify(holidays));
-  } catch (err) {
-    console.warn(
-      `[HolidayService] Failed to store in localStorage for ${cacheKey}:`,
-      err
+    localStorage.setItem(
+      `holidays-${cacheKey}`,
+      JSON.stringify(
+        holidays.map((h) => ({
+          ...h,
+          // toISOString gives "2025-05-18T00:00:00.000Z"
+          start: h.start.toISOString(),
+          end: h.end?.toISOString(),
+        }))
+      )
     );
+  } catch (e) {
+    console.warn(`[HolidayService] localStorage write failed ${cacheKey}`, e);
   }
 
   return holidays;

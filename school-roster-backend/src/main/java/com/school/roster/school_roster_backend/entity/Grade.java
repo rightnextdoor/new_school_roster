@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.school.roster.school_roster_backend.entity.embedded.ScoreDetails;
 import com.school.roster.school_roster_backend.entity.enums.StudentGradeStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,19 +32,10 @@ public class Grade {
     @JsonBackReference(value = "roster-grades")
     private Roster roster;
 
-    @ElementCollection
-    @CollectionTable(name = "grade_performance_scores", joinColumns = @JoinColumn(name = "grade_id"))
-    private List<Float> performanceScores = new ArrayList<>();
+    @Embedded
+    private ScoreDetails scoreDetails = new ScoreDetails();
 
-    @ElementCollection
-    @CollectionTable(name = "grade_quiz_scores", joinColumns = @JoinColumn(name = "grade_id"))
-    private List<Float> quizScores = new ArrayList<>();
-
-    @ElementCollection
-    @CollectionTable(name = "grade_quarterly_exam_scores", joinColumns = @JoinColumn(name = "grade_id"))
-    private List<Float> quarterlyExamScores = new ArrayList<>();
-
-    private Float finalGpa;
+    private Double initialGrade = 0.0;
 
     @Enumerated(EnumType.STRING)
     private StudentGradeStatus finalStatus;

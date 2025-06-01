@@ -34,9 +34,8 @@ public class GradeController {
             throw new RuntimeException("Access denied: You are not allowed to update grades in this roster.");
         }
 
-        Grade updatedGrade = gradeService.updateGrades(
-                request.getStudentId(),
-                request.getRosterId(),
+        Grade updatedGrade = gradeService.updateGrade(
+                request.getGradeId(),
                 request.getPerformanceScores(),
                 request.getQuizScores(),
                 request.getQuarterlyExamScores()
@@ -112,21 +111,52 @@ public class GradeController {
     }
 
     private GradeResponse buildGradeResponse(Grade grade) {
+        var details = grade.getScoreDetails(); // embedded ScoreDetails
+
         return new GradeResponse(
+                // ─── core grade identifiers ───────────────────────────────────────────
                 grade.getId(),
-                grade.getFinalGpa(),
-                grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null, // 🛠 new
-                grade.getStudent() != null ? grade.getStudent().getId() : null,
-                grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getFirstName() : null,
-                grade.getStudent() != null && grade.getStudent().getStudentProfile() != null ? grade.getStudent().getStudentProfile().getLastName() : null,
-                grade.getRoster() != null ? grade.getRoster().getId() : null,
-                grade.getRoster() != null ? grade.getRoster().getSubjectName() : null,
-                grade.getRoster() != null ? grade.getRoster().getPeriod() : null,
-                grade.getRoster() != null ? grade.getRoster().getNickname() : null,
-                grade.getRoster() != null && grade.getRoster().getTeacher() != null && grade.getRoster().getTeacher().getNonStudentProfile() != null
-                        ? grade.getRoster().getTeacher().getNonStudentProfile().getFirstName() : null,
-                grade.getRoster() != null && grade.getRoster().getTeacher() != null && grade.getRoster().getTeacher().getNonStudentProfile() != null
-                        ? grade.getRoster().getTeacher().getNonStudentProfile().getLastName() : null
+                grade.getInitialGrade(),
+                grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null,
+
+                // ─── student summary ───────────────────────────────────────────────
+                grade.getStudent().getId(),
+                grade.getStudent().getStudentProfile() != null
+                        ? grade.getStudent().getStudentProfile().getFirstName() : null,
+                grade.getStudent().getStudentProfile() != null
+                        ? grade.getStudent().getStudentProfile().getLastName() : null,
+
+                // ─── roster summary ────────────────────────────────────────────────
+                grade.getRoster().getId(),
+                grade.getRoster().getSubjectName(),
+                grade.getRoster().getPeriod(),
+                grade.getRoster().getNickname(),
+                grade.getRoster().getTeacher() != null
+                        && grade.getRoster().getTeacher().getNonStudentProfile() != null
+                        ? grade.getRoster().getTeacher().getNonStudentProfile().getFirstName()
+                        : null,
+                grade.getRoster().getTeacher() != null
+                        && grade.getRoster().getTeacher().getNonStudentProfile() != null
+                        ? grade.getRoster().getTeacher().getNonStudentProfile().getLastName()
+                        : null,
+
+                // ─── PERFORMANCE breakdown ────────────────────────────────────────
+                details.getPerformanceScores(),
+                details.getPerformanceTotal(),
+                details.getPerformancePs(),
+                details.getPerformanceWs(),
+
+                // ─── QUIZ breakdown ───────────────────────────────────────────────
+                details.getQuizScores(),
+                details.getQuizTotal(),
+                details.getQuizPs(),
+                details.getQuizWs(),
+
+                // ─── EXAM breakdown ───────────────────────────────────────────────
+                details.getQuarterlyExamScores(),
+                details.getQuarterlyExamTotal(),
+                details.getQuarterlyExamPs(),
+                details.getQuarterlyExamWs()
         );
     }
 
@@ -135,11 +165,11 @@ public class GradeController {
     @Data
     @AllArgsConstructor
     public static class UpdateGradeRequest {
-        private String studentId;
         private Long rosterId;
-        private List<Float> performanceScores;
-        private List<Float> quizScores;
-        private List<Float> quarterlyExamScores;
+        private Long gradeId;
+        private List<Integer> performanceScores;
+        private List<Integer> quizScores;
+        private List<Integer> quarterlyExamScores;
     }
 
     @Data
@@ -163,17 +193,40 @@ public class GradeController {
     @Data
     @AllArgsConstructor
     public static class GradeResponse {
+        // ─── Basic identifiers ─────────────────────────────────────────────
         private Long gradeId;
-        private Float finalGpa;
+        private Double initialGrade;
         private String finalStatus;
+
+        // ─── Student summary ──────────────────────────────────────────────
         private String studentId;
         private String studentFirstName;
         private String studentLastName;
+
+        // ─── Roster summary ───────────────────────────────────────────────
         private Long rosterId;
         private String subjectName;
         private String period;
         private String nickname;
         private String teacherFirstName;
         private String teacherLastName;
+
+        // ─── PERFORMANCE breakdown ────────────────────────────────────────
+        private List<Integer> performanceScores;
+        private Integer performanceTotal;
+        private Double performancePs;
+        private Double performanceWs;
+
+        // ─── QUIZ breakdown ───────────────────────────────────────────────
+        private List<Integer> quizScores;
+        private Integer quizTotal;
+        private Double quizPs;
+        private Double quizWs;
+
+        // ─── EXAM breakdown ───────────────────────────────────────────────
+        private List<Integer> quarterlyExamScores;
+        private Integer quarterlyExamTotal;
+        private Double quarterlyExamPs;
+        private Double quarterlyExamWs;
     }
 }

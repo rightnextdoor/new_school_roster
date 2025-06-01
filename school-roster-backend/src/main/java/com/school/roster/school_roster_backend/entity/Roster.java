@@ -39,6 +39,15 @@ public class Roster {
     @JsonBackReference(value = "student-rosters")
     private List<User> students = new ArrayList<>();
 
+    @OneToOne(
+            mappedBy = "roster",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @JsonManagedReference(value = "roster-hps")
+    private HighestPossibleScore highestPossibleScore;
+
     @OneToMany(mappedBy = "roster", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "roster-grades")
     private List<Grade> grades = new ArrayList<>();

@@ -64,18 +64,19 @@ class GradeControllerIntegrationTest {
         mockMvc.perform(get("/api/grades/myGpa")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.studentGpa").value(0.0f))
+                .andExpect(jsonPath("$.studentGpa").value(0.0))
                 .andExpect(jsonPath("$.subjects").isArray());
     }
 
     @Test
     void updateGrade_shouldReturnAccessDenied() throws Exception {
+        // Now using Integer lists for scores
         GradeController.UpdateGradeRequest updateRequest = new GradeController.UpdateGradeRequest(
-                "student123",
                 1L,
-                java.util.List.of(90f),
-                java.util.List.of(80f),
-                java.util.List.of(85f)
+                1L,
+                java.util.List.of(90),
+                java.util.List.of(80),
+                java.util.List.of(85)
         );
 
         mockMvc.perform(put("/api/grades/update")
@@ -127,7 +128,7 @@ class GradeControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", "Bearer " + token)
                         .content(objectMapper.writeValueAsString(getByStudentRequest)))
-                .andExpect(status().is4xxClientError()); // should now be 403
+                .andExpect(status().is4xxClientError()); // should now be 403 or 4xx
     }
 
 }
