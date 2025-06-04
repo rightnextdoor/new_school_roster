@@ -1,0 +1,116 @@
+/* src/components/roster/styles/roster-selector.css */
+
+/* Semi‐transparent backdrop */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* The white dialog box (widened) */
+.modal-dialog {
+  background: #fff;
+  border-radius: 8px;
+  width: 600px !important;
+  max-width: 95% !important;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-dialog h3 {
+  margin-top: 0;
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* form‐group for the <select> */
+/* Center label and select vertically */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+/* Base select styling */
+.form-group select {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f5f6f8;
+  transition: border-color 0.2s;
+}
+
+/* On focus */
+.form-group select:focus {
+  border-color: #008891;
+  outline: none;
+}
+
+/* Buttons in a row at bottom (centered) */
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-cancel,
+.btn-delete,
+.btn-update {
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+/* Cancel = neutral gray */
+.btn-cancel {
+  background: #ccc;
+  color: #333;
+}
+.btn-cancel:hover {
+  background: #bbb;
+}
+
+/* Delete = red */
+.btn-delete {
+  background: #e74c3c;
+  color: #fff;
+}
+.btn-delete:hover {
+  background: #c0392b;
+}
+
+/* Update = teal */
+.btn-update {
+  background: #008891;
+  color: #fff;
+}
+.btn-update:hover {
+  background: #006f75;
+}
+
+/* Override just the roster‐select dropdown to be larger */
+.roster-dropdown {
+  width: 500px; /* or whatever pixel width you need */
+  min-width: 400px; /* ensures it never shrinks below this */
+  font-size: 14px; /* match existing styling */
+}

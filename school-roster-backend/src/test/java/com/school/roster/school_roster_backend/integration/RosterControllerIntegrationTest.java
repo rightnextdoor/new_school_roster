@@ -17,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -76,6 +78,7 @@ class RosterControllerIntegrationTest {
         roster.setSubjectName("Math");
         roster.setPeriod("First Quarter");
         roster.setNickname("MATH101");
+        roster.setGradeLevel("1");
 
         mockMvc.perform(post("/api/rosters/create")
                         .header("Authorization", "Bearer " + token)
@@ -146,7 +149,9 @@ class RosterControllerIntegrationTest {
 
     @Test
     void addStudentToRoster_shouldReturnAccessDenied() throws Exception {
-        RosterController.AddStudentRequest addStudentRequest = new RosterController.AddStudentRequest(1L, "student123");
+        List<String> userId = new ArrayList<>();
+        userId.add("student123");
+        RosterController.AddStudentRequest addStudentRequest = new RosterController.AddStudentRequest(1L, userId);
 
         mockMvc.perform(post("/api/rosters/addStudent")
                         .header("Authorization", "Bearer " + token)
@@ -157,7 +162,9 @@ class RosterControllerIntegrationTest {
 
     @Test
     void removeStudentFromRoster_shouldReturnAccessDenied() throws Exception {
-        RosterController.AddStudentRequest removeStudentRequest = new RosterController.AddStudentRequest(1L, "student123");
+        List<String> userId = new ArrayList<>();
+        userId.add("student123");
+        RosterController.AddStudentRequest removeStudentRequest = new RosterController.AddStudentRequest(1L, userId);
 
         mockMvc.perform(post("/api/rosters/removeStudent")
                         .header("Authorization", "Bearer " + token)

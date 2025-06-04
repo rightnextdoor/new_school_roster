@@ -24,6 +24,8 @@ public class Roster {
     private String subjectName;
     private String period;
     private String nickname;
+    @Column(name = "grade_level", nullable = false)
+    private String gradeLevel;
 
     @ManyToOne
     @JoinColumn(name = "teacher_id")

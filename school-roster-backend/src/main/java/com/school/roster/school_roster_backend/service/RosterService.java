@@ -49,6 +49,7 @@ public class RosterService {
         roster.setSubjectName(incomingRoster.getSubjectName());
         roster.setPeriod(incomingRoster.getPeriod());
         roster.setNickname(incomingRoster.getNickname());
+        roster.setGradeLevel(incomingRoster.getGradeLevel());
         roster.setTeacher(teacher);
         roster.setStudents(new ArrayList<>());
         roster.setGrades(new ArrayList<>());
@@ -91,19 +92,21 @@ public class RosterService {
     }
 
     // === Assign Student to Roster ===
-    public Roster addStudentToRoster(Long rosterId, String studentId) {
+    public Roster addStudentToRoster(Long rosterId, List<String> studentIds) {
         Roster roster = rosterRepository.findById(rosterId)
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 
-        User student = userRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+        for (String studentId : studentIds) {
+            User student = userRepository.findById(studentId)
+                    .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
 
-        if (!roster.getStudents().contains(student)) {
-            roster.getStudents().add(student);
+            if (!roster.getStudents().contains(student)) {
+                roster.getStudents().add(student);
 
-            // Create empty Grade object when student is added
-            Grade grade = gradeService.createGrade(roster, student);
-            roster.getGrades().add(grade);
+                // Create an empty Grade object when a new student is added
+                Grade grade = gradeService.createGrade(roster, student);
+                roster.getGrades().add(grade);
+            }
         }
 
         return rosterRepository.save(roster);
@@ -123,20 +126,25 @@ public class RosterService {
 
 
     // === Remove Student from Roster ===
-    public Roster removeStudentFromRoster(Long rosterId, String studentId) {
+    public Roster removeStudentFromRoster(Long rosterId, List<String> studentIds) {
         Roster roster = rosterRepository.findById(rosterId)
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 
-        User student = userRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+        // Fetch all grades for this roster once
+        List<Grade> allGrades = gradeRepository.findByRosterId(rosterId);
 
-        roster.getStudents().remove(student);
+        for (String studentId : studentIds) {
+            User student = userRepository.findById(studentId)
+                    .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
 
-        // Delete grade linked to this roster + student
-        List<Grade> grades = gradeRepository.findByRosterId(roster.getId());
-        grades.stream()
-                .filter(g -> g.getStudent().getId().equals(studentId))
-                .forEach(gradeRepository::delete);
+            // Remove student from roster if present
+            roster.getStudents().remove(student);
+
+            // Delete any grades linked to this roster + student
+            allGrades.stream()
+                    .filter(g -> g.getStudent().getId().equals(studentId))
+                    .forEach(gradeRepository::delete);
+        }
 
         return rosterRepository.save(roster);
     }
@@ -147,6 +155,7 @@ public class RosterService {
                 .orElseThrow(() -> new RuntimeException("Roster not found with ID: " + rosterId));
 
         existingRoster.setSubjectName(updatedData.getSubjectName());
+        existingRoster.setGradeLevel(updatedData.getGradeLevel());
         existingRoster.setPeriod(updatedData.getPeriod());
         existingRoster.setNickname(updatedData.getNickname());
 

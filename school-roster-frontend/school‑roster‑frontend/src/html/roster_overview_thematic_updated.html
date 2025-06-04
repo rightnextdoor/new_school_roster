@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Roster Overview - Themed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      background-color: #f5f6f8;
+      color: #333;
+    }
+    /* Header Bar */
+    .header-bar {
+      background-color: #008891;
+      color: #fff;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-bar h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    /* Button Styles */
+    .button-container {
+      padding: 16px 24px;
+      background-color: #fff;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .button-container button {
+      background-color: #008891;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .button-container button:hover {
+      background-color: #006f75;
+      transform: translateY(-1px);
+    }
+    .button-container button:active {
+      background-color: #005d62;
+      transform: translateY(0);
+    }
+    /* Table Styles */
+    .table-container {
+      padding: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    thead {
+      background-color: #008891;
+      color: #fff;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+    }
+    th {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    tbody tr {
+      border-bottom: 1px solid #e1e5eb;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #fafbfc;
+    }
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+    tbody tr:hover {
+      background-color: #e8f1fb;
+    }
+    /* Action button styled same as main buttons */
+    td button {
+      background-color: #008891;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    td button:hover {
+      background-color: #006f75;
+      transform: translateY(-1px);
+    }
+    td button:active {
+      background-color: #005d62;
+      transform: translateY(0);
+    }
+    .gpa {
+      font-weight: 700;
+      color: #d35400;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <h1>Roster Overview</h1>
+  </div>
+  <div class="button-container">
+    <button>Create Roster</button>
+    <button>Update Roster</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Teacher Name</th>
+          <th>Subject</th>
+          <th>Period</th>
+          <th>Section</th>
+          <th># Students</th>
+          <th>Class GPA</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ms. Reyes</td>
+          <td>Mathematics</td>
+          <td>Q3</td>
+          <td>Ruby Section</td>
+          <td>25</td>
+          <td class="gpa">3.12</td>
+          <td><button>View Roster</button></td>
+        </tr>
+        <tr>
+          <td>Mr. Santos</td>
+          <td>Science</td>
+          <td>Q3</td>
+          <td>Emerald Section</td>
+          <td>22</td>
+          <td class="gpa">3.45</td>
+          <td><button>View Roster</button></td>
+        </tr>
+        <tr>
+          <td>Mrs. Lopez</td>
+          <td>English</td>
+          <td>Q3</td>
+          <td>Sapphire Section</td>
+          <td>27</td>
+          <td class="gpa">3.20</td>
+          <td><button>View Roster</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

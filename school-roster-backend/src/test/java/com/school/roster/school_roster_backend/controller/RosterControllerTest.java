@@ -14,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,35 +94,46 @@ class RosterControllerTest {
 
     @Test
     void addStudentToRoster_shouldAddSuccessfully() {
+        // Arrange
         User teacher = new User();
         when(userService.getUserByEmail(anyString())).thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(anyLong(), eq(teacher))).thenReturn(true);
 
         Roster roster = new Roster();
-        when(rosterService.addStudentToRoster(anyLong(), anyString())).thenReturn(roster);
+        when(rosterService.addStudentToRoster(anyLong(), anyList())).thenReturn(roster);
 
+        List<String> userIds = Collections.singletonList("studentId");
         RosterController.AddStudentRequest request =
-                new RosterController.AddStudentRequest(1L, "studentId");
+                new RosterController.AddStudentRequest(1L, userIds);
+
+        // Act
         Roster result = controller.addStudentToRoster(request, authentication).getBody();
 
+        // Assert
         assertEquals(roster, result);
     }
 
     @Test
     void removeStudentFromRoster_shouldRemoveSuccessfully() {
+        // Arrange
         User teacher = new User();
         when(userService.getUserByEmail(anyString())).thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(anyLong(), eq(teacher))).thenReturn(true);
 
         Roster roster = new Roster();
-        when(rosterService.removeStudentFromRoster(anyLong(), anyString())).thenReturn(roster);
+        when(rosterService.removeStudentFromRoster(anyLong(), anyList())).thenReturn(roster);
 
+        List<String> userIds = Collections.singletonList("studentId");
         RosterController.AddStudentRequest request =
-                new RosterController.AddStudentRequest(1L, "studentId");
+                new RosterController.AddStudentRequest(1L, userIds);
+
+        // Act
         Roster result = controller.removeStudentFromRoster(request, authentication).getBody();
 
+        // Assert
         assertEquals(roster, result);
     }
+
 
     @Test
     void reassignTeacher_shouldReassignSuccessfully() {
@@ -220,12 +233,12 @@ class RosterControllerTest {
         student.setId("studentId");
         student.setStudentProfile(studentProfile);
 
-        // Create a Grade. Now we set initialGrade, not finalGpa.
+        // Create a Grade. Now we set initialGrade (instead of finalGpa).
         Grade grade = new Grade();
         grade.setStudent(student);
-        grade.setInitialGrade(95.0);                            // ← changed from setFinalGpa(95f)
+        grade.setInitialGrade(95.0);
         grade.setFinalStatus(StudentGradeStatus.WITH_HONORS);
-        grade.setScoreDetails(new ScoreDetails());              // ensure non-null details
+        grade.setScoreDetails(new ScoreDetails()); // ensure non-null details
 
         // Roster with one student and one grade
         Roster roster = new Roster();
@@ -233,6 +246,7 @@ class RosterControllerTest {
         roster.setSubjectName("Math");
         roster.setPeriod("First Period");
         roster.setNickname("Algebra Fun");
+        roster.setGradeLevel("1");
         roster.setTeacher(teacher);
         roster.setStudents(List.of(student));
         roster.setGrades(List.of(grade));
@@ -245,6 +259,7 @@ class RosterControllerTest {
         assertThat(response.getSubjectName()).isEqualTo("Math");
         assertThat(response.getPeriod()).isEqualTo("First Period");
         assertThat(response.getNickname()).isEqualTo("Algebra Fun");
+        assertThat(response.getGradeLevel()).isEqualTo("1");
         assertThat(response.getTeacherFirstName()).isEqualTo("TeacherFirst");
         assertThat(response.getTeacherLastName()).isEqualTo("TeacherLast");
         assertThat(response.getClassGpa()).isEqualTo(92f);
@@ -254,9 +269,11 @@ class RosterControllerTest {
         assertThat(studentInfo.getStudentId()).isEqualTo("studentId");
         assertThat(studentInfo.getFirstName()).isEqualTo("StudentFirst");
         assertThat(studentInfo.getLastName()).isEqualTo("StudentLast");
-        assertThat(studentInfo.getFinalGpa()).isEqualTo(95f);       // still named finalGpa in DTO
+        // Check initialGrade field instead of finalGpa
+        assertThat(studentInfo.getFinalGpa()).isEqualTo(95.0);
         assertThat(studentInfo.getFinalStatus()).isEqualTo("WITH_HONORS");
     }
+
 
     @Test
     void updateRoster_shouldThrowIfUserCannotEdit() {
@@ -300,9 +317,10 @@ class RosterControllerTest {
         when(userService.getUserByEmail("teacher@example.com"))
                 .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
-
+        List<String> userId = new ArrayList<>();
+        userId.add("studentId");
         RosterController.AddStudentRequest request =
-                new RosterController.AddStudentRequest(1L, "studentId");
+                new RosterController.AddStudentRequest(1L, userId);
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
@@ -318,9 +336,10 @@ class RosterControllerTest {
         when(userService.getUserByEmail("teacher@example.com"))
                 .thenReturn(Optional.of(teacher));
         when(rosterService.canEditRoster(eq(1L), eq(teacher))).thenReturn(false);
-
+        List<String> userId = new ArrayList<>();
+        userId.add("studentId");
         RosterController.AddStudentRequest request =
-                new RosterController.AddStudentRequest(1L, "studentId");
+                new RosterController.AddStudentRequest(1L, userId);
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,

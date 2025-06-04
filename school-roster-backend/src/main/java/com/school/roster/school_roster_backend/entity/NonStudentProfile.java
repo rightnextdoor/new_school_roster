@@ -46,6 +46,7 @@ public class NonStudentProfile {
     private List<PhoneNumberEntry> phoneNumbers;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private CivilStatus civilStatus;
 
     private String spouseFirstName;

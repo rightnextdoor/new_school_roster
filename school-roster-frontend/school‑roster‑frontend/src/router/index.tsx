@@ -16,6 +16,10 @@ import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
 import StudentsListPage from '../components/students/StudentsListPage';
 import ProfilePage from '../components/profile/ProfilePage';
+import RosterOverviewPage from '../components/roster/pages/RosterOverviewPage';
+import CreateRosterPage from '../components/roster/pages/CreateRosterPage';
+import UpdateRosterPage from '../components/roster/pages/UpdateRosterPage';
+import RosterViewPage from '../components/roster/pages/RosterViewPage';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserById, User } from '../services/userApi';
 
@@ -87,6 +91,11 @@ export default function Router() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+
+        <Route path="/roster" element={<RosterOverviewPage />} />
+        <Route path="/roster/create" element={<CreateRosterPage />} />
+        <Route path="/roster/update/:id" element={<UpdateRosterPage />} />
+        <Route path="/roster/view/:id" element={<RosterViewPage />} />
 
         <Route
           path="/students"

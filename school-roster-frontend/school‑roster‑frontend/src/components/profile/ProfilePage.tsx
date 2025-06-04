@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/profile/ProfilePage.tsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './profile.css';
 
 import ProfileHeader from './ProfileHeader';
-import ProfileModal from './ProfileModal';
 import ProfileForm from './ProfileForm';
 import StudentProfile from './StudentProfile';
 import NonStudentProfile from './NonStudentProfile';
@@ -32,15 +29,16 @@ interface ProfilePageProps {
   };
   editMode?: boolean;
   backTo: string;
+  onCloseModal?: () => void;
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({
   user,
   editMode = false,
   backTo,
+  onCloseModal,
 }) => {
   const [profile, setProfile] = useState<any | null | undefined>(undefined);
-  const [showModal, setShowModal] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -73,8 +71,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
       try {
         const data = await getProfileByUserId(user.id);
         if (data === null) {
+          // we simply set profile to null; modal is shown from DashboardPage instead
           setProfile(null);
-          setShowModal(true);
         } else {
           // record which gov IDs exist
           if ('taxNumberEncrypted' in data) {
@@ -92,7 +90,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
         );
       }
     })();
-  }, [user, navigate]);
+  }, [user]);
 
   // Save
   const handleSave = async (formData: any) => {
@@ -163,7 +161,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
       }
 
       setProfile(saved);
-      navigate(`/profile/${user.id}`, { state: { user, from: backTo } });
+      if (backTo === 'CLOSE_MODAL' && onCloseModal) {
+        onCloseModal();
+      } else {
+        navigate(`/profile/${user.id}`, { state: { user, from: backTo } });
+      }
     } catch (err: any) {
       console.error('Failed to save profile', err);
       const msg =
@@ -178,7 +180,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
-  // 3) Loading skeleton
+  // 2) Loading skeleton
   if (profile === undefined) {
     return (
       <div className="profile-container">
@@ -191,8 +193,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
     );
   }
 
-  // 4) Edit/Create form
-  if (editMode && canEdit) {
+  // 3) Edit/Create form (allow create when profile===null)
+  if (editMode) {
     const mode = profile ? 'edit' : 'create';
     const initialData =
       profile ||
@@ -212,11 +214,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
             mode={mode}
             user={user}
             onSave={handleSave}
-            onCancel={() =>
-              navigate(`/profile/${user.id}`, {
-                state: { user, from: backTo },
-              })
-            }
+            onCancel={() => {
+              if (backTo === 'CLOSE_MODAL' && onCloseModal) {
+                onCloseModal();
+              } else {
+                navigate(`/profile/${user.id}`, {
+                  state: { user, from: backTo },
+                });
+              }
+            }}
             saving={saving}
           />
         </main>
@@ -224,43 +230,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
     );
   }
 
-  // 5) Null-profile modal
-  if (profile === null && showModal) {
-    return (
-      <ProfileModal
-        isOpen
-        title={loginStudent ? 'Profile Not Found' : 'No Profile Detected'}
-        message={
-          loginStudent
-            ? 'Please contact your teacher to create your student profile.'
-            : 'You can create or update your profile now.'
-        }
-        primaryAction={
-          !loginStudent
-            ? {
-                label: 'Create / Update Profile',
-                onClick: () =>
-                  navigate(`${backTo}/edit`, { state: { user, from: backTo } }),
-              }
-            : undefined
-        }
-        secondaryAction={{
-          label: 'Close',
-          onClick: () => navigate(backTo),
-        }}
-      />
-    );
-  }
-
-  // 6) Read-only view
+  // 4) Read-only view (here, profile is guaranteed non-null)
   const fullName = [profile.firstName, profile.middleName, profile.lastName]
     .filter(Boolean)
     .join(' ');
-
-  // select correct avatar url
   const avatarUrl = profile.profilePicture;
-
-  // humanize primary role and append grade (role from user.roles)
   const primaryRole = roles[0] || '';
   const roleName = primaryRole
     .split('_')
@@ -271,7 +245,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
 
   return (
     <div>
-      <button onClick={() => navigate(backTo)} className="teal-button mb-4">
+      <button
+        onClick={() => {
+          if (backTo === 'CLOSE_MODAL' && onCloseModal) {
+            onCloseModal();
+          } else {
+            navigate(backTo);
+          }
+        }}
+        className="teal-button mb-4"
+      >
         ← Back
       </button>
       <div className="profile-container">
@@ -282,11 +265,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
             fullName={fullName}
             badgeText={badgeText}
             actionLabel={loginStudent ? 'Request Edit' : 'Edit Profile'}
-            onActionClick={() =>
-              navigate(`/profile/${user.id}/edit`, {
-                state: { user, from: backTo },
-              })
-            }
+            onActionClick={() => {
+              if (backTo === 'CLOSE_MODAL' && onCloseModal) {
+                onCloseModal();
+              } else {
+                navigate(`/profile/${user.id}/edit`, {
+                  state: { user, from: backTo },
+                });
+              }
+            }}
           />
           <section id="user-info">
             {profileStudent ? (

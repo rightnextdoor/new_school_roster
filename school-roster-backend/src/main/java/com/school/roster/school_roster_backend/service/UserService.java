@@ -1,5 +1,6 @@
 package com.school.roster.school_roster_backend.service;
 
+import com.school.roster.school_roster_backend.controller.AuthController;
 import com.school.roster.school_roster_backend.entity.*;
 import com.school.roster.school_roster_backend.entity.enums.Role;
 import com.school.roster.school_roster_backend.repository.*;
@@ -113,6 +114,16 @@ public class UserService {
         return false;
     }
 
+    public AuthController.UserInfoResponse updateRole(AuthController.RoleUpdate roleUpdate){
+        User user = getUserById(roleUpdate.getUserId()).get();
+        user.setRoles(roleUpdate.getRoles());
+        AuthController.UserInfoResponse response = new AuthController.UserInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getRoles()
+        );
+        return response;
+    }
 
     // === Full Clean Delete User ===
     public void deleteUser(String id) {

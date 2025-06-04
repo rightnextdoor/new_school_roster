@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Grade Edit – Excel Style with Numbered Headers</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f6f8;
+        color: #333;
+      }
+      /* Header Bar (Teacher & Class Info) */
+      .header-bar {
+        background-color: #008891;
+        color: #fff;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header-bar .title {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .header-bar button {
+        background-color: #fff;
+        color: #008891;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      .header-bar button:hover {
+        background-color: #e0f7fa;
+      }
+      .header-bar button:active {
+        background-color: #b2ebf2;
+      }
+
+      /* Container for the table */
+      .table-container {
+        margin: 16px;
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 1200px; /* ensure horizontal scroll if too many columns */
+        background-color: #fff;
+        font-size: 12px;
+      }
+      /* Crisper grid lines */
+      th,
+      td {
+        border: 1px solid #999;
+        padding: 4px 6px;
+        text-align: center;
+        white-space: nowrap;
+      }
+      thead th {
+        background-color: #008891;
+        color: #fff;
+        font-weight: 500;
+        font-size: 12px;
+      }
+
+      /* Group header (“Written Works”, etc.) – first header row */
+      .group-header th {
+        border-bottom: none; /* eliminate double border below */
+        vertical-align: bottom;
+      }
+      .group-header th span.label {
+        display: block;
+        font-weight: 500;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .group-header th .btn-group {
+        display: inline-flex;
+        gap: 2px;
+      }
+      .group-header th .btn-group button {
+        background-color: #fff;
+        color: #008891;
+        border: 1px solid #666;
+        border-radius: 2px;
+        padding: 2px 4px;
+        font-size: 10px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .group-header th .btn-group button:hover {
+        background-color: #e0f7fa;
+      }
+      .group-header th .btn-group button:active {
+        background-color: #b2ebf2;
+      }
+
+      /* Number header row (second header) */
+      .number-header th {
+        background-color: #66a5ad;
+        color: #fff;
+        font-size: 11px;
+      }
+
+      /* HPS row (third header) */
+      .hps-row {
+        background-color: #e0e0e0;
+      }
+      .hps-row th,
+      .hps-row td {
+        border-top: none; /* eliminate double border above */
+        font-weight: 500;
+        font-size: 11px;
+        color: #333;
+        vertical-align: middle;
+      }
+      .hps-row td input {
+        width: 40px;
+        padding: 2px 4px;
+        font-size: 11px;
+        text-align: center;
+        border: 1px solid #999;
+        background-color: #f9f9f9;
+      }
+
+      /* Section label rows (“MALE” / “FEMALE”) */
+      .section-label td {
+        background-color: #cfd8dc;
+        color: #37474f;
+        font-weight: 700;
+        text-align: left;
+        padding-left: 8px;
+        font-size: 12px;
+        border-top: 2px solid #666; /* thicker line above section */
+        border-bottom: 1px solid #666; /* thicker line below section label */
+      }
+
+      /* Student sub-rows styling */
+      .student-row input {
+        width: 40px;
+        padding: 2px 4px;
+        font-size: 11px;
+        text-align: center;
+        border: 1px solid #999;
+      }
+      .student-row td.name-cell {
+        text-align: left;
+        background-color: #f9f9f9;
+        font-weight: 500;
+        font-size: 12px;
+      }
+      .student-row td.fixed-cell {
+        background-color: #fafafa;
+        font-weight: 500;
+        font-size: 12px;
+      }
+      tbody tr:nth-child(even).student-row {
+        background-color: #f5f5f5;
+      }
+
+      /* Sticky first column and header rows */
+      thead th,
+      .hps-row th,
+      tbody td.name-cell {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background-color: #fff;
+      }
+      thead .group-header th,
+      thead .number-header th,
+      thead .hps-row th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header Bar -->
+    <div class="header-bar">
+      <div class="title">Ms. Reyes • Mathematics • Q3 • Ruby Section</div>
+      <button>Export</button>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <!-- Group Header Row -->
+          <tr class="group-header">
+            <th rowspan="3">Learners’ Names</th>
+            <!-- Written Works group: 10 scores + Total + PS + WS = 13 columns -->
+            <th colspan="13">
+              <span class="label">Written Works (40%)</span>
+              <div class="btn-group">
+                <button>+ Add</button><button>- Remove</button>
+              </div>
+            </th>
+            <!-- Performance Tasks group: 10 scores + Total + PS + WS = 13 columns -->
+            <th colspan="13">
+              <span class="label">Performance Tasks (40%)</span>
+              <div class="btn-group">
+                <button>+ Add</button><button>- Remove</button>
+              </div>
+            </th>
+            <!-- Quarterly Assessment group: 1 score + PS + WS = 3 columns -->
+            <th colspan="3">
+              <span class="label">Quarterly Assessment (20%)</span>
+              <div class="btn-group">
+                <button>+ Add</button><button>- Remove</button>
+              </div>
+            </th>
+            <th rowspan="3">Initial<br />Grade</th>
+            <th rowspan="3">Status</th>
+          </tr>
+          <!-- Number Header Row -->
+          <tr class="number-header">
+            <!-- WW numbers 1-10 -->
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+            <th>7</th>
+            <th>8</th>
+            <th>9</th>
+            <th>10</th>
+            <!-- WW Total, PS, WS -->
+            <th>Total</th>
+            <th>PS</th>
+            <th>WS</th>
+            <!-- PT numbers 1-10 -->
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+            <th>7</th>
+            <th>8</th>
+            <th>9</th>
+            <th>10</th>
+            <!-- PT Total, PS, WS -->
+            <th>Total</th>
+            <th>PS</th>
+            <th>WS</th>
+            <!-- QA number, PS, WS -->
+            <th>1</th>
+            <th>PS</th>
+            <th>WS</th>
+          </tr>
+          <!-- HPS Row (Highest Possible Scores) -->
+          <tr class="hps-row">
+            <td>Highest Possible Score</td>
+            <!-- WW HPS inputs -->
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="16" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="73" /></td>
+            <td><input type="text" value="100" /></td>
+            <td><input type="text" value="40" /></td>
+            <!-- PT HPS inputs -->
+            <td><input type="text" value="37" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="25" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="20" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="92" /></td>
+            <td><input type="text" value="100" /></td>
+            <td><input type="text" value="40" /></td>
+            <!-- QA HPS input -->
+            <td><input type="text" value="40" /></td>
+            <td><input type="text" value="100" /></td>
+            <td><input type="text" value="20" /></td>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- MALE section label -->
+          <tr class="section-label">
+            <td colspan="32">MALE</td>
+          </tr>
+
+          <!-- Student 1 -->
+          <tr class="student-row">
+            <td class="name-cell">1. Juan Dela Cruz</td>
+            <!-- WW scores -->
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="16" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td class="fixed-cell">73</td>
+            <td class="fixed-cell">100.00</td>
+            <td class="fixed-cell">40.00</td>
+            <!-- PT scores -->
+            <td><input type="text" value="37" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="25" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="20" /></td>
+            <td><input type="text" value="15" /></td>
+            <td class="fixed-cell">92</td>
+            <td class="fixed-cell">100.00</td>
+            <td class="fixed-cell">40.00</td>
+            <!-- QA score -->
+            <td><input type="text" value="40" /></td>
+            <td class="fixed-cell">100.00</td>
+            <td class="fixed-cell">20.00</td>
+            <!-- Initial / Status -->
+            <td class="fixed-cell">99.00</td>
+            <td class="fixed-cell">Passing</td>
+          </tr>
+
+          <!-- Student 2 -->
+          <tr class="student-row">
+            <td class="name-cell">2. Luis Lopez</td>
+            <!-- WW scores -->
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="2" /></td>
+            <td><input type="text" value="7" /></td>
+            <td><input type="text" value="4" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="8" /></td>
+            <td><input type="text" value="11" /></td>
+            <td><input type="text" value="9" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="10" /></td>
+            <td class="fixed-cell">64</td>
+            <td class="fixed-cell">87.67</td>
+            <td class="fixed-cell">38.90</td>
+            <!-- PT scores -->
+            <td><input type="text" value="30" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="11" /></td>
+            <td><input type="text" value="21" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="20" /></td>
+            <td><input type="text" value="25" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="7" /></td>
+            <td class="fixed-cell">78</td>
+            <td class="fixed-cell">84.78</td>
+            <td class="fixed-cell">33.91</td>
+            <!-- QA score -->
+            <td><input type="text" value="38" /></td>
+            <td class="fixed-cell">95.00</td>
+            <td class="fixed-cell">19.00</td>
+            <!-- Initial / Status -->
+            <td class="fixed-cell">82.98</td>
+            <td class="fixed-cell">Passing</td>
+          </tr>
+
+          <!-- FEMALE section label -->
+          <tr class="section-label">
+            <td colspan="32">FEMALE</td>
+          </tr>
+
+          <!-- Student 3 -->
+          <tr class="student-row">
+            <td class="name-cell">3. Maria Santos</td>
+            <!-- WW scores -->
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="14" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="4" /></td>
+            <td><input type="text" value="5" /></td>
+            <td class="fixed-cell">71</td>
+            <td class="fixed-cell">97.26</td>
+            <td class="fixed-cell">38.90</td>
+            <!-- PT scores -->
+            <td><input type="text" value="32" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="15" /></td>
+            <td><input type="text" value="25" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="14" /></td>
+            <td><input type="text" value="19" /></td>
+            <td><input type="text" value="11" /></td>
+            <td><input type="text" value="9" /></td>
+            <td class="fixed-cell">87</td>
+            <td class="fixed-cell">94.57</td>
+            <td class="fixed-cell">37.83</td>
+            <!-- QA score -->
+            <td><input type="text" value="40" /></td>
+            <td class="fixed-cell">100.00</td>
+            <td class="fixed-cell">20.00</td>
+            <!-- Initial / Status -->
+            <td class="fixed-cell">96.73</td>
+            <td class="fixed-cell">Passing</td>
+          </tr>
+          <!-- Student 4 -->
+          <tr class="student-row">
+            <td class="name-cell">4. Anna Garcia</td>
+            <!-- WW scores -->
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="5" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="9" /></td>
+            <td><input type="text" value="4" /></td>
+            <td><input type="text" value="6" /></td>
+            <td><input type="text" value="7" /></td>
+            <td class="fixed-cell">68</td>
+            <td class="fixed-cell">93.15</td>
+            <td class="fixed-cell">37.26</td>
+            <!-- PT scores -->
+            <td><input type="text" value="32" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="25" /></td>
+            <td><input type="text" value="12" /></td>
+            <td><input type="text" value="14" /></td>
+            <td><input type="text" value="9" /></td>
+            <td><input type="text" value="10" /></td>
+            <td><input type="text" value="7" /></td>
+            <td class="fixed-cell">77</td>
+            <td class="fixed-cell">83.70</td>
+            <td class="fixed-cell">33.48</td>
+            <!-- QA score -->
+            <td><input type="text" value="28" /></td>
+            <td class="fixed-cell">70.00</td>
+            <td class="fixed-cell">14.00</td>
+            <!-- Initial / Status -->
+            <td class="fixed-cell">84.74</td>
+            <td class="fixed-cell">Passing</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+// src/layouts/AppLayout.tsx
 import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -27,7 +28,7 @@ export default function AppLayout() {
                 Students
               </Link>
             )}
-            <Link to="/rosters" className="hover:text-green-300">
+            <Link to="/roster" className="hover:text-green-300">
               Rosters
             </Link>
             <Link to="/grades" className="hover:text-green-300">

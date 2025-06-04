@@ -1,0 +1,242 @@
+/* ---------------------------------
+   UPDATE/CREATE FORM STYLING
+--------------------------------- */
+.update-roster-container {
+  background: #f5f6f8;
+  padding: 40px 20px 80px;
+  min-height: 100vh;
+}
+
+.header-bar {
+  background-color: #008891;
+  color: #fff;
+  padding: 20px 24px;
+  text-align: center;
+}
+.header-bar h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  user-select: none;
+}
+
+/* RosterFieldsForm container */
+.form-container {
+  max-width: 800px;
+  margin: 24px auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #2c3e50;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: #f5f6f8;
+}
+
+/* Buttons at bottom */
+.button-group {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.button-group button {
+  background-color: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s;
+}
+.button-group button:hover {
+  background-color: #006f75;
+}
+
+/* Error banner */
+.error-banner {
+  background: #fdecea;
+  color: #611a15;
+  border: 1px solid #f5c6cb;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* -------------------------------
+   STUDENT / TEACHER PANEL STYLING
+--------------------------------- */
+.panel-container {
+  margin: 24px auto;
+  max-width: 800px;
+  border: 1px solid #e1e5eb;
+  border-radius: 6px;
+  background: #fafbfc;
+  padding: 16px;
+}
+
+.panel-container h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+/* “Action” dropdown above student list */
+.panel-container .form-group {
+  margin-bottom: 12px;
+}
+
+/* “Create Student” button */
+.create-student-btn {
+  margin-bottom: 12px;
+  background-color: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, transform 0.1s;
+}
+.create-student-btn:hover {
+  background-color: #006f75;
+  transform: translateY(-1px);
+}
+.create-student-btn:active {
+  background-color: #005d62;
+  transform: translateY(0);
+}
+
+.list-sections {
+  display: flex;
+  gap: 24px;
+}
+
+.list-section {
+  flex: 1;
+}
+
+.list-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.empty-message {
+  color: #999;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.panel-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e1e5eb;
+}
+.panel-item:last-child {
+  border-bottom: none;
+}
+
+.panel-item input[type='checkbox'],
+.panel-item input[type='radio'] {
+  margin-right: 8px;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.panel-item img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ddd;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.panel-item label {
+  font-size: 16px;
+  color: #333;
+}
+
+/* -------------------------------
+   MODAL STYLING (profile modal)
+--------------------------------- */
+body.no-scroll {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+.modal-dialog {
+  background: #fff;
+  padding: 24px;
+  border-radius: 6px;
+  max-width: 400px;
+  width: 90%;
+}
+/* Allow a “large” modal that fills most of the screen */
+.modal-dialog.modal-large {
+  width: 100vw !important;
+  max-width: none;
+  height: 100vh !important;
+  max-height: none;
+  padding: 0; /* remove extra padding if ProfilePage already provides its own */
+  border-radius: 4px; /* or keep 6px, as you prefer */
+  overflow: auto; /* hide any overflow—ProfilePage will scroll internally */
+}
+
+/* Make sure the inner ProfilePage scrolls if its content is taller */
+.modal-dialog.modal-large > * {
+  height: 100%;
+}
+
+/* -------------------------------
+   SHRINK DROPDOWNS THROUGHOUT
+--------------------------------- */
+/* Make the dropdowns in update panels smaller,
+   matching the student-list cell styling */
+.panel-container select,
+.modal-dialog select,
+#viewSelect,
+#panelSelect,
+#rosterSelect {
+  width: 180px; /* narrower width */
+  font-size: 14px; /* smaller font-size */
+  padding: 4px 8px; /* reduced vertical padding */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f6f8;
+  box-sizing: border-box;
+}

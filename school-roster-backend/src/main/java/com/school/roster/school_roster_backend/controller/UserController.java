@@ -1,6 +1,8 @@
 package com.school.roster.school_roster_backend.controller;
 
 import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.enums.Role;
+import com.school.roster.school_roster_backend.service.ProfileService;
 import com.school.roster.school_roster_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +21,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final ProfileService profileService;
 
     // === Get All Users ===
     @GetMapping
@@ -64,6 +67,30 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/roleList")
+    public ResponseEntity<List<UserListResponse>> getUsersByRole(@RequestBody RoleRequest request) {
+
+        String roleStr = request.getRole();
+        if (roleStr == null || roleStr.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Role roleEnum;
+        try {
+            roleEnum = Role.valueOf(roleStr.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Fetch User entities by enum role
+        List<User> users = userService.getUsersByRole(String.valueOf(roleEnum));
+
+        // Map each User → UserListResponse via ProfileService
+        List<UserListResponse> dtoList = profileService.buildUserList(users);
+
+        return ResponseEntity.ok(dtoList);
+    }
+
 
     // === Request DTOs ===
     @Data
@@ -77,5 +104,21 @@ public class UserController {
     public static class UpdateUserRequest {
         private String id;
         private User updatedUser;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class RoleRequest {
+        private String role;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class UserListResponse {
+        private String id;
+        private String photoUrl;
+        private String firstName;
+        private String middleName;
+        private String lastName;
     }
 }

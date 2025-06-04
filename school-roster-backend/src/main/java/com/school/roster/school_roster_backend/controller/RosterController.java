@@ -156,8 +156,12 @@ public class RosterController {
                 roster.getSubjectName(),
                 roster.getPeriod(),
                 roster.getNickname(),
+                roster.getGradeLevel(),
+                roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getId() : null,
                 roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getFirstName() : null,
+                roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getMiddleName() : null,
                 roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getLastName() : null,
+                roster.getTeacher() != null && roster.getTeacher().getNonStudentProfile() != null ? roster.getTeacher().getNonStudentProfile().getProfilePicture() : null,
                 roster.getStudents().stream().map(student -> {
                     Grade grade = roster.getGrades().stream()
                             .filter(g -> g.getStudent() != null && g.getStudent().getId().equals(student.getId()))
@@ -165,7 +169,9 @@ public class RosterController {
                             .orElse(null);
                     return new StudentInfo(
                             student.getId(),
+                            student.getStudentProfile() != null ? student.getStudentProfile().getProfilePicture() : null,
                             student.getStudentProfile() != null ? student.getStudentProfile().getFirstName() : null,
+                            student.getStudentProfile() != null ? student.getStudentProfile().getMiddleName() : null,
                             student.getStudentProfile() != null ? student.getStudentProfile().getLastName() : null,
                             grade != null ? grade.getInitialGrade() : null,
                             grade != null && grade.getFinalStatus() != null ? grade.getFinalStatus().name() : null // 🛠 add this
@@ -203,8 +209,12 @@ public class RosterController {
         private String subjectName;
         private String period;
         private String nickname;
+        private String gradeLevel;
+        private String teacherId;
         private String teacherFirstName;
+        private String teacherMiddleName;
         private String teacherLastName;
+        private String teacherPhoto;
         private List<StudentInfo> students;
         private Float classGpa;
     }
@@ -213,7 +223,9 @@ public class RosterController {
     @AllArgsConstructor
     public static class StudentInfo {
         private String studentId;
+        private String studentPhoto;
         private String firstName;
+        private String middleName;
         private String lastName;
         private Double finalGpa;
         private String finalStatus;
@@ -229,6 +241,6 @@ public class RosterController {
     @AllArgsConstructor
     public static class AddStudentRequest {
         private Long rosterId;
-        private String studentId;
+        private List<String> studentId;
     }
 }

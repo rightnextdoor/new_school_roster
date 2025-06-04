@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Update Roster - Mockup</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        background-color: #f5f6f8;
+        color: #333;
+      }
+      /* Header Bar */
+      .header-bar {
+        background-color: #008891;
+        color: #fff;
+        padding: 20px 24px;
+        text-align: center;
+      }
+      .header-bar h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      /* Form Container */
+      .form-container {
+        max-width: 800px;
+        margin: 24px auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #2c3e50;
+      }
+      input[type='text'],
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+      /* View toggle */
+      .view-toggle {
+        margin: 24px 0;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .view-toggle label {
+        margin: 0;
+        font-weight: 500;
+      }
+      /* Lists */
+      .list-container {
+        background-color: #fafbfc;
+        border: 1px solid #e1e5eb;
+        border-radius: 4px;
+        padding: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .list-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e5eb;
+      }
+      .list-item:last-child {
+        border-bottom: none;
+      }
+      .list-item img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 12px;
+      }
+      .list-item label {
+        flex-grow: 1;
+        font-size: 14px;
+        color: #2c3e50;
+      }
+      .list-item input[type='checkbox'],
+      .list-item input[type='radio'] {
+        margin-right: 8px;
+        transform: scale(1.2);
+        cursor: pointer;
+      }
+      /* Create New Student Button */
+      .create-student-btn {
+        display: none;
+        margin-bottom: 12px;
+        background-color: #008891;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      .create-student-btn:hover {
+        background-color: #006f75;
+        transform: translateY(-1px);
+      }
+      .create-student-btn:active {
+        background-color: #005d62;
+        transform: translateY(0);
+      }
+      /* Buttons */
+      .button-group {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+      .button-group button {
+        background-color: #008891;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      .button-group button:hover {
+        background-color: #006f75;
+        transform: translateY(-1px);
+      }
+      .button-group button:active {
+        background-color: #005d62;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-bar">
+      <h1>Update Roster</h1>
+    </div>
+    <div class="form-container">
+      <!-- Roster Details -->
+      <div class="form-group">
+        <label for="subjectName">Subject Name</label>
+        <input type="text" id="subjectName" value="Mathematics" />
+      </div>
+      <div class="form-group">
+        <label for="period">Period</label>
+        <input type="text" id="period" value="3rd Quarter" />
+      </div>
+      <div class="form-group">
+        <label for="nickname">Section/Nickname</label>
+        <input type="text" id="nickname" value="Ruby Section" />
+      </div>
+      <div class="form-group">
+        <label for="gradeLevel">Grade Level</label>
+        <select id="gradeLevel">
+          <option value="7">7</option>
+          <option value="8" selected>8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+
+      <!-- View List Toggle -->
+      <div class="view-toggle">
+        <label for="viewSelect">View:</label>
+        <select id="viewSelect" onchange="toggleList()">
+          <option value="students" selected>Students</option>
+          <option value="teacher">Teacher</option>
+        </select>
+      </div>
+
+      <!-- Create New Student Button (only when Students selected) -->
+      <button id="createStudentBtn" class="create-student-btn">
+        + Add New Student
+      </button>
+
+      <!-- Student List -->
+      <div id="studentsList" class="list-container">
+        <div class="list-item">
+          <input type="checkbox" checked />
+          <img src="https://via.placeholder.com/32" alt="Student Photo" />
+          <label>Juan Dela Cruz (ID: 101)</label>
+        </div>
+        <div class="list-item">
+          <input type="checkbox" checked />
+          <img src="https://via.placeholder.com/32" alt="Student Photo" />
+          <label>Maria Lopez (ID: 105)</label>
+        </div>
+        <div class="list-item">
+          <input type="checkbox" />
+          <img src="https://via.placeholder.com/32" alt="Student Photo" />
+          <label>Luis Reyes (ID: 110)</label>
+        </div>
+        <div class="list-item">
+          <input type="checkbox" />
+          <img src="https://via.placeholder.com/32" alt="Student Photo" />
+          <label>Pedro Santos (ID: 112)</label>
+        </div>
+        <div class="list-item">
+          <input type="checkbox" />
+          <img src="https://via.placeholder.com/32" alt="Student Photo" />
+          <label>Anna Garcia (ID: 115)</label>
+        </div>
+      </div>
+
+      <!-- Teacher List -->
+      <div id="teacherList" class="list-container" style="display: none">
+        <div class="list-item">
+          <input type="radio" name="teacher" checked />
+          <img src="https://via.placeholder.com/32" alt="Teacher Photo" />
+          <label>Ms. Reyes (ID: 5)</label>
+        </div>
+        <div class="list-item">
+          <input type="radio" name="teacher" />
+          <img src="https://via.placeholder.com/32" alt="Teacher Photo" />
+          <label>Mr. Santos (ID: 6)</label>
+        </div>
+        <div class="list-item">
+          <input type="radio" name="teacher" />
+          <img src="https://via.placeholder.com/32" alt="Teacher Photo" />
+          <label>Mrs. Lopez (ID: 7)</label>
+        </div>
+        <div class="list-item">
+          <input type="radio" name="teacher" />
+          <img src="https://via.placeholder.com/32" alt="Teacher Photo" />
+          <label>Mr. Dela Cruz (ID: 8)</label>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="button-group">
+        <button>Cancel</button>
+        <button>Save Changes</button>
+      </div>
+    </div>
+
+    <script>
+      function toggleList() {
+        var view = document.getElementById('viewSelect').value;
+        document.getElementById('studentsList').style.display =
+          view === 'students' ? 'block' : 'none';
+        document.getElementById('teacherList').style.display =
+          view === 'teacher' ? 'block' : 'none';
+        document.getElementById('createStudentBtn').style.display =
+          view === 'students' ? 'inline-block' : 'none';
+      }
+      // Initialize visibility on page load
+      toggleList();
+    </script>
+  </body>
+</html>

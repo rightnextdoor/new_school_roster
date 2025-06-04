@@ -1,0 +1,221 @@
+/* src/components/roster/styles/roster-view.css */
+
+.view-loading,
+.view-error {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1.2rem;
+}
+
+.view-error button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background-color: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.view-error button:hover {
+  background-color: #006f75;
+}
+
+.view-container {
+  background: #fff;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* ----------------------------
+   1) Teacher Section Styles
+----------------------------- */
+.teacher-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6f8;
+  padding: 24px; /* added more vertical padding */
+  border-radius: 8px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.teacher-photo {
+  width: 120px; /* bigger */
+  height: 120px; /* bigger */
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 24px; /* increase gap */
+}
+
+.teacher-photo.placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #ddd;
+  margin-right: 24px;
+}
+
+.teacher-info {
+  text-align: left;
+}
+
+.teacher-name {
+  margin: 0;
+  font-size: 1.75rem; /* increase font */
+  font-weight: 600;
+}
+
+.teacher-role {
+  margin: 4px 0 0 0;
+  font-size: 1.1rem; /* slightly larger */
+  color: #555;
+}
+
+.back-button {
+  position: absolute;
+  right: 24px;
+  background: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.back-button:hover {
+  background: #006f75;
+}
+
+/* ----------------------------
+   2) Roster Info Bar Styles
+----------------------------- */
+.roster-info {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  background: #e8f1fb;
+  padding: 16px 24px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.info-value {
+  font-weight: 600;
+}
+
+/* ----------------------------
+   3) Main Content Layout
+----------------------------- */
+.content-area {
+  display: flex;
+  gap: 24px;
+}
+
+/* ----------------------------
+   3a) Student List (Left)
+----------------------------- */
+.student-list {
+  flex: 1;
+  max-width: 350px; /* slightly wider */
+  background: #fafbfc;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 24px; /* more padding */
+  display: flex;
+  flex-direction: column;
+}
+
+.student-list-title {
+  margin: 0 0 16px 0; /* increase bottom margin */
+  font-size: 1.4rem; /* bigger */
+  font-weight: 600;
+  text-align: center;
+}
+
+.student-list-container {
+  max-height: 500px; /* whatever fixed height you need */
+  overflow-y: auto;
+}
+
+/* Each student row */
+.student-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px; /* more spacing */
+}
+
+.student-photo {
+  width: 64px; /* bigger */
+  height: 64px; /* bigger */
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 16px; /* more gap */
+}
+
+.student-photo.placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ddd;
+  margin-right: 16px;
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-name {
+  margin: 0;
+  font-size: 1.1rem; /* bigger */
+  font-weight: 500;
+}
+
+.student-id {
+  margin: 4px 0 0 0; /* small top margin */
+  font-size: 0.9rem; /* slightly larger ID text */
+  color: #666;
+}
+
+/* ----------------------------
+   3b) Graph Area (Right)
+----------------------------- */
+.graph-area {
+  flex: 2;
+  background: #fafbfc;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 24px; /* more padding */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Graph controls + placeholder */
+.graph-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px; /* more bottom margin */
+}
+
+.graph-placeholder {
+  flex: 1;
+  background: #fff;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 1.1rem; /* slightly larger text */
+}

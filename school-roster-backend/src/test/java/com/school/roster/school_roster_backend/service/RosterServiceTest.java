@@ -104,9 +104,10 @@ class RosterServiceTest {
         Grade fakeGrade = new Grade();
         fakeGrade.setStudent(student);
         when(gradeService.createGrade(roster, student)).thenReturn(fakeGrade);
-
+        List<String> userId = new ArrayList<>();
+        userId.add("studentId");
         // Act
-        Roster updated = rosterService.addStudentToRoster(1L, "studentId");
+        Roster updated = rosterService.addStudentToRoster(1L, userId);
 
         // Assert: the student was added to roster.getStudents()
         assertThat(updated.getStudents()).containsExactly(student);
@@ -120,8 +121,10 @@ class RosterServiceTest {
     void addStudentToRoster_rosterOrStudentNotFound_shouldThrow() {
         // Case 1: Roster not found
         when(rosterRepository.findById(1L)).thenReturn(Optional.empty());
+        List<String> userId = new ArrayList<>();
+        userId.add("studentId");
         assertThrows(RuntimeException.class,
-                () -> rosterService.addStudentToRoster(1L, "studentId"),
+                () -> rosterService.addStudentToRoster(1L, userId),
                 "Expected exception when roster not found");
 
         // Case 2: Roster exists, but student not found
@@ -130,9 +133,10 @@ class RosterServiceTest {
         roster.setGrades(new ArrayList<>());
         when(rosterRepository.findById(1L)).thenReturn(Optional.of(roster));
         when(userRepository.findById("badId")).thenReturn(Optional.empty());
-
+        List<String> userId2 = new ArrayList<>();
+        userId2.add("badId");
         assertThrows(RuntimeException.class,
-                () -> rosterService.addStudentToRoster(1L, "badId"),
+                () -> rosterService.addStudentToRoster(1L, userId2),
                 "Expected exception when student not found");
     }
 
@@ -166,9 +170,10 @@ class RosterServiceTest {
 
         // Stub gradeRepository.findByRosterId so that no matching grades exist
         when(gradeRepository.findByRosterId(1L)).thenReturn(new ArrayList<>());
-
+        List<String> userId = new ArrayList<>();
+        userId.add("studentId");
         // Act
-        rosterService.removeStudentFromRoster(1L, "studentId");
+        rosterService.removeStudentFromRoster(1L, userId);
 
         // Assert: student removed
         assertThat(roster.getStudents()).isEmpty();

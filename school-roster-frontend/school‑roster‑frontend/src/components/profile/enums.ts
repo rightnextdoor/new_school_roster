@@ -107,3 +107,17 @@ export enum PhoneType {
   CELLULAR = 'CELLULAR',
   WORK = 'WORK',
 }
+
+// From OperationType.java
+export enum OperationType {
+  ADD = 'ADD',
+  REMOVE = 'REMOVE',
+  UPDATE = 'UPDATE',
+}
+
+// From CategoryType.java
+export enum CategoryType {
+  PERFORMANCE = 'PERFORMANCE',
+  QUIZ = 'QUIZ',
+  EXAM = 'EXAM',
+}

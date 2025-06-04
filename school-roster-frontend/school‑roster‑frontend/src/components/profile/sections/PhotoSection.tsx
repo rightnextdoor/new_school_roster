@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/profile/sections/PhotoSection.tsx
-
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useController, Control } from 'react-hook-form';
 import SectionCard from '../SectionCard';
@@ -13,13 +12,23 @@ interface Props {
 
 export default function PhotoSection({ control, formMode }: Props) {
   const fieldName = 'profilePicture';
-  const { field } = useController({ name: fieldName as any, control });
+
+  // Include a "required" rule here:
+  const {
+    field,
+    fieldState, // gives us access to errors
+  } = useController({
+    name: fieldName as any,
+    control,
+    rules: { required: 'Photo is required' },
+  });
+
   // Raw image data and preview
   const [rawPhoto, setRawPhoto] = useState<string>(field.value || '');
   const [previewPhoto, setPreviewPhoto] = useState<string>(field.value || '');
   const [isCropping, setIsCropping] = useState(false);
 
-  // Sync preview when form value resets or loads
+  // Whenever the form value changes (e.g. reset), keep preview in sync
   useEffect(() => {
     setPreviewPhoto(field.value || '');
   }, [field.value]);
@@ -43,7 +52,7 @@ export default function PhotoSection({ control, formMode }: Props) {
     setIsCropping(false);
   };
 
-  // Show cropper if in cropping state
+  // If in cropping mode, show the PhotoCropper full-screen
   if (isCropping) {
     return (
       <PhotoCropper
@@ -94,6 +103,11 @@ export default function PhotoSection({ control, formMode }: Props) {
             />
           </label>
         </div>
+      )}
+
+      {/* validation error message */}
+      {fieldState.error && (
+        <p className="text-red-600 mt-2">{fieldState.error.message}</p>
       )}
     </SectionCard>
   );

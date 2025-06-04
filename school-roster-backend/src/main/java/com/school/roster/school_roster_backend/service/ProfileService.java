@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.service;
 
 import com.school.roster.school_roster_backend.controller.ProfileController;
+import com.school.roster.school_roster_backend.controller.UserController;
 import com.school.roster.school_roster_backend.entity.NonStudentProfile;
 import com.school.roster.school_roster_backend.entity.StudentProfile;
 import com.school.roster.school_roster_backend.entity.User;
@@ -175,6 +176,46 @@ public class ProfileService {
                 .collect(Collectors.toList());
     }
 
+    public List<UserController.UserListResponse> buildUserList(List<User> users) {
+        return users.stream()
+                .map(this::toUserListDto)
+                .collect(Collectors.toList());
+    }
+
+    private UserController.UserListResponse toUserListDto(User u) {
+        String photoUrl = "";
+        String firstName = "";
+        String middleName = "";
+        String lastName = "";
+
+        Object profile = getProfileByUserId(u.getId());
+        if (profile instanceof StudentProfile) {
+            StudentProfile sp = (StudentProfile) profile;
+            if (sp.getProfilePicture() != null) {
+                photoUrl = sp.getProfilePicture();
+            }
+            firstName = sp.getFirstName();
+            middleName = sp.getMiddleName();
+            lastName = sp.getLastName();
+        } else if (profile instanceof NonStudentProfile) {
+            NonStudentProfile nsp = (NonStudentProfile) profile;
+            if (nsp.getProfilePicture() != null) {
+                photoUrl = nsp.getProfilePicture();
+            }
+            firstName = nsp.getFirstName();
+            middleName = nsp.getMiddleName();
+            lastName = nsp.getLastName();
+        }
+
+        return new UserController.UserListResponse(
+                u.getId(),
+                photoUrl,
+                firstName,
+                middleName,
+                lastName
+        );
+    }
+
     // === Create Non-Student Profile ===
     public NonStudentProfile createNonStudentProfile(String userId, NonStudentProfile nonStudentProfile) {
         User user = userRepository.findById(userId)
@@ -303,7 +344,6 @@ public class ProfileService {
         return nonStudentProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("NonStudentProfile not found with ID: " + id));
     }
-
 
     // === Get Profile by User ID ===
     public Object getProfileByUserId(String userId) {

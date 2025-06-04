@@ -1,0 +1,102 @@
+/* src/styles/roster‐create.css */
+
+/* 
+  This CSS is identical to the <style> block you provided, 
+  except adapted to React’s .className usage.
+*/
+
+/* The white “card” container centered on the page */
+.main-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header bar inside that container */
+.form-header {
+  background-color: #008891;
+  color: #fff;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* The content area (form) */
+.form-content {
+  padding: 24px;
+}
+
+/* Each label + input grouping */
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f5f6f8;
+  color: #333;
+  transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #008891;
+  outline: none;
+}
+
+/* Buttons at the bottom of the form */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.action-buttons button {
+  background-color: #008891;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, transform 0.1s;
+}
+.action-buttons button:hover {
+  background-color: #006f75;
+  transform: translateY(-1px);
+}
+.action-buttons button:active {
+  background-color: #005d62;
+  transform: translateY(0);
+}
+
+/* Error banner matching profile’s style */
+.error-banner {
+  background: #fdecea; /* light red background */
+  color: #611a15; /* dark red text */
+  border: 1px solid #f5c6cb; /* slightly darker red border */
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  text-align: center;
+}

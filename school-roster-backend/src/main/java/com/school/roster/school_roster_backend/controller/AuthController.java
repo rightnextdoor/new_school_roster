@@ -1,6 +1,7 @@
 package com.school.roster.school_roster_backend.controller;
 
 import com.school.roster.school_roster_backend.entity.User;
+import com.school.roster.school_roster_backend.entity.enums.Role;
 import com.school.roster.school_roster_backend.service.AuthenticationService;
 import com.school.roster.school_roster_backend.service.UserService;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -66,12 +69,26 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/role")
+    @PreAuthorize("isAuthenticated()")
+    public  ResponseEntity<UserInfoResponse> updateRole(@RequestBody RoleUpdate roleUpdate){
+        UserInfoResponse response = userService.updateRole(roleUpdate);
+        return ResponseEntity.ok(response);
+    }
+
     // === DTOs ===
     @Data
     @AllArgsConstructor
     public static class LoginRequest {
         private String email;
         private String password;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class RoleUpdate{
+        private String userId;
+        private Set<Role> roles;
     }
 
     public record UserInfoResponse(String id, String email, Object roles) {}
